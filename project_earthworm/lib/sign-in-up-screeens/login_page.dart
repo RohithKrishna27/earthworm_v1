@@ -21,9 +21,10 @@ class _LoginPageState extends State<LoginPage>
   late Animation<Offset> _slideAnimation;
 
   // Theme colors
-  final Color _primaryGreen = Color(0xFF4CAF50);
-  final Color _darkGreen = Color(0xFF2E7D32);
-  final Color _brown = Color(0xFF795548);
+  final Color _primaryGreen = Color.fromARGB(255, 17, 219, 24);
+  final Color _darkGreen = Color.fromARGB(255, 42, 139, 181);
+  final Color _brown = Color.fromARGB(255, 42, 139, 181);
+  final Color _red = Color.fromARGB(255, 192, 57, 57);
 
   @override
   void initState() {
@@ -63,9 +64,9 @@ class _LoginPageState extends State<LoginPage>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              _primaryGreen.withOpacity(0.1),
+              _darkGreen.withOpacity(0.8),
               Colors.white,
-              _brown.withOpacity(0.1),
+              _brown.withOpacity(0.8),
             ],
           ),
         ),
@@ -102,10 +103,10 @@ class _LoginPageState extends State<LoginPage>
         return Transform.scale(
           scale: value,
           child: Container(
-            height: 120,
-            width: 120,
+            height: 150,
+            width: 150,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: _primaryGreen,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -120,11 +121,12 @@ class _LoginPageState extends State<LoginPage>
               // Using a fallback icon in case the image fails to load
               child: Image.asset(
                 'assets/earthworm_logo.png',
-                height: 80,
-                width: 80,
+                height: 150,
+                width: 150,
+                fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(
-                    Icons.eco, // Using an eco icon as fallback
+                    Icons.eco,
                     size: 60,
                     color: _primaryGreen,
                   );
@@ -181,7 +183,7 @@ class _LoginPageState extends State<LoginPage>
                     Navigator.pushReplacementNamed(context, '/signup'),
                 child: Text('Sign Up'),
                 style: TextButton.styleFrom(
-                  foregroundColor: _darkGreen,
+                  foregroundColor: _red,
                 ),
               ),
             ],
