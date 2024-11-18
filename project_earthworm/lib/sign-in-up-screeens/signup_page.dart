@@ -68,7 +68,7 @@ class _SignUpPageState extends State<SignUpPage>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              _primaryGreen.withOpacity(0.8),
+              _darkGreen.withOpacity(0.8),
               Colors.white,
               _brown.withOpacity(0.8),
             ],
