@@ -1,7 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'calculator/calculator_home.dart';
 
-class FarmerHome extends StatelessWidget {
+class FarmerHome extends StatefulWidget {
+  @override
+  _FarmerHomeState createState() => _FarmerHomeState();
+}
+
+class _FarmerHomeState extends State<FarmerHome> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    HomeScreen(),
+    CalculatorHomeScreen(),
+    // SellScreen(),
+    // ProfileScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: Color(0xFF4CAF50),
+        unselectedItemColor: Colors.grey,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calculate_outlined),
+            label: 'Calculator',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.sell_outlined),
+            label: 'Sell',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class RouteGenerator {
+  static Route<dynamic> generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/home':
+        return MaterialPageRoute(builder: (_) => FarmerHome());
+      case '/calculator-detail':
+        return MaterialPageRoute(builder: (_) => CalculatorHomeScreen());
+      case '/sell-detail':
+      // return MaterialPageRoute(builder: (_) => SellDetailScreen());
+      case '/profile-edit':
+      // return MaterialPageRoute(builder: (_) => ProfileEditScreen());
+      default:
+        return MaterialPageRoute(
+          builder: (_) => Scaffold(
+            body: Center(child: Text('Page not found')),
+          ),
+        );
+    }
+  }
+}
+
+class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,189 +96,19 @@ class FarmerHome extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Card
+            // Home page content
             Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome to Your Farm!',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Manage your products and connect with buyers directly.',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 24),
-
-            // Quick Actions Grid
-            Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16),
-            GridView.count(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildActionCard(
-                  context,
-                  'My Products',
-                  Icons.inventory_2,
-                  Colors.green[100]!,
-                  () {},
-                ),
-                _buildActionCard(
-                  context,
-                  'Orders',
-                  Icons.shopping_cart,
-                  Colors.blue[100]!,
-                  () {},
-                ),
-                _buildActionCard(
-                  context,
-                  'Add Product',
-                  Icons.add_circle,
-                  Colors.orange[100]!,
-                  () {},
-                ),
-                _buildActionCard(
-                  context,
-                  'Analytics',
-                  Icons.analytics,
-                  Colors.purple[100]!,
-                  () {},
-                ),
-              ],
-            ),
-            SizedBox(height: 24),
-
-            // Stats Card
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Quick Stats',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildStatItem('Active Products', '12'),
-                        _buildStatItem('Pending Orders', '5'),
-                        _buildStatItem('Total Sales', '₹15,000'),
-                      ],
-                    ),
-                  ],
-                ),
+              child: ListTile(
+                title: Text('Welcome'),
+                subtitle: Text('Manage your farm activities'),
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Color(0xFF4CAF50),
-        child: Icon(Icons.add),
-        tooltip: 'Add New Product',
-      ),
-    );
-  }
-
-  Widget _buildActionCard(BuildContext context, String title, IconData icon,
-      Color color, VoidCallback onTap) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 40, color: Colors.grey[800]),
-              SizedBox(height: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF4CAF50),
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
     );
   }
 }
