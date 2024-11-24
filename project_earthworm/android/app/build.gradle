@@ -10,8 +10,10 @@ plugins {
 
 android {
     namespace = "com.example.project_earthworm"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = flutter.compileSdkVersion    
+      ndkVersion "25.1.8937393"
+
+    
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8

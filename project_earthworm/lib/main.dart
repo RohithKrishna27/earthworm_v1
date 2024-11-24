@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:project_earthworm/farmer/farmerdashboard.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'package:project_earthworm/buyer/buyer_home.dart';
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
           '/signup': (context) => SignUpPage(),
           '/farmer/home': (context) => FarmerHome(),
           '/buyer/home': (context) => BuyerHome(),
+          '/dashboard' : (context) => OnboardingScreen()
         },
       ),
     );
