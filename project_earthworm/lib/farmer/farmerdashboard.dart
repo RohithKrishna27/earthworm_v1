@@ -143,26 +143,62 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         _checkExistingProfile();
 
   }
-  Future<void> _checkExistingProfile() async {
-    try {
-      final hasProfile = await _firebaseService.checkFarmerProfileExists();
-      if (hasProfile && mounted) {
-        // Navigate directly to dashboard if profile exists
+Future<void> _checkExistingProfile() async {
+  setState(() => _isLoading = true);
+
+  try {
+    // Check if user is logged in
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      // If no user, trigger authentication or registration
+      await _registerOrSignInUser();
+      return;
+    }
+
+    // Check Firestore for existing profile
+    DocumentSnapshot profileDoc = await FirebaseFirestore.instance
+        .collection('farmers')
+        .doc(currentUser.uid)
+        .get();
+
+    if (profileDoc.exists) {
+      // Profile exists, navigate to dashboard
+      if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => FarmerDashboard(
-              farmerId: _firebaseService.currentUserId!,
+              farmerId: currentUser.uid,
             ),
           ),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+    } else {
+      // No profile exists, stay on onboarding screen
+      setState(() => _isLoading = false);
     }
+  } catch (e) {
+    // Handle any errors
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error checking profile: $e')),
+    );
+    setState(() => _isLoading = false);
   }
+}
+
+Future<void> _registerOrSignInUser() async {
+  try {
+    // Perform anonymous sign-in
+    UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
+    
+    // Trigger profile check again
+    await _checkExistingProfile();
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Authentication error: $e')),
+    );
+  }
+}
   Future<void> _getCurrentLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -188,43 +224,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate() || _currentPosition == null) return;
+Future<void> _submitForm() async {
+  if (!_formKey.currentState!.validate() || _currentPosition == null) return;
 
-    try {
-      setState(() => _isLoading = true);
+  try {
+    setState(() => _isLoading = true);
 
-      // Create a new document in Firestore
-      DocumentReference userRef = await FirebaseFirestore.instance
-          .collection('farmers')
-          .add({
-        'name': _nameController.text,
-        'landSize': double.parse(_landSizeController.text),
-        'farmingMethod': _selectedFarmingMethod,
-        'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      // Navigate to dashboard with the user ID
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => FarmerDashboard(
-              farmerId: _firebaseService.currentUserId!,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving data: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
+    // Get current authenticated user
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('No user logged in');
     }
-  }
 
+    // Store profile in Firestore using user's UID
+    await FirebaseFirestore.instance
+        .collection('farmers')
+        .doc(currentUser.uid)
+        .set({
+      'name': _nameController.text,
+      'landSize': double.parse(_landSizeController.text),
+      'farmingMethod': _selectedFarmingMethod,
+      'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
+      'createdAt': FieldValue.serverTimestamp(),
+      'onboardingComplete': true,  // Add this flag
+    });
+
+    // Navigate to dashboard
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FarmerDashboard(
+            farmerId: currentUser.uid,
+          ),
+        ),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error saving data: $e')),
+    );
+  } finally {
+    setState(() => _isLoading = false);
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
