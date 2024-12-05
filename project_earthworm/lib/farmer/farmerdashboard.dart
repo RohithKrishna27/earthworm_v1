@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -13,6 +14,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:carousel_slider/carousel_controller.dart'; // Add this import
+import 'package:geocoding/geocoding.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -385,11 +387,72 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _unitPriceController = TextEditingController();
 
+
+
+String? _farmerName; // To store the farmer's name
+String? _cityName; // To store the city name
+String? _landsize; // To store the land size
+
+Future<void> _fetchFarmerDetails() async {
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    // Fetch farmer details from Firestore
+    final docSnapshot = await FirebaseFirestore.instance
+        .collection('farmers')
+        .doc(user.uid)
+        .get();
+
+    if (docSnapshot.exists) {
+      setState(() {
+        _farmerName = docSnapshot.get('name');
+        _landsize = docSnapshot.get('landsize')?.toString(); // Fetch land size
+
+      });
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error fetching farmer details: $e')),
+    );
+  }
+}
+
+Future<void> _fetchCityName() async {
+  if (_currentPosition == null) return;
+
+  try {
+    // Get placemarks using reverse geocoding
+    final placemarks = await placemarkFromCoordinates(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+    );
+
+    if (placemarks.isNotEmpty) {
+      setState(() {
+        _cityName = placemarks.first.locality ?? 'Unknown City';
+      });
+    } else {
+      setState(() {
+        _cityName = 'Unknown City';
+      });
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error fetching city name: $e')),
+    );
+    setState(() {
+      _cityName = 'Error fetching city';
+    });
+  }
+}
   @override
   void initState() {
     super.initState();
     _initializeData();
     _startMarketScroll();
+      _fetchFarmerDetails(); // Fetch farmer details
+
   }
 
   void _startMarketScroll() {
@@ -836,37 +899,96 @@ Widget _buildZoneLegend(String label, Color color) {
   );
 }
 Future<void> _fetchMarketData() async {
+  final String primaryBaseUrl = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070";
+  final String primaryApiKey = "579b464db66ec23bdd000001e3c6f8ed17cb4769425e0176dc5b7318";
+  final String backupBaseUrl = "https://market-api-m222.onrender.com/api/commodities/state/Maharashtra";
+  final String defaultState = "Maharashtra";
+
   try {
-    final String baseUrl = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070";
-    final String apiKey = "579b464db66ec23bdd000001e3c6f8ed17cb4769425e0176dc5b7318";
-    
-    // Add Maharashtra filter
-    final String defaultState = "Maharashtra";
-    final url = Uri.parse('$baseUrl?api-key=$apiKey&format=json&filters[state]=${Uri.encodeComponent(defaultState)}');
-    
-    final response = await http.get(url);
-    
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      final records = data['records'] as List<dynamic>;
-      
-      setState(() {
-        _marketData = records.map((record) => {
-          'commodity': record['commodity'] ?? '',
-          'price': record['modal_price'] ?? '0.0',
-          'trend': _calculateTrend(record['modal_price']),
-          'market': record['market'] ?? '',
-          'state': record['state'] ?? '',
-        }).toList();
-      });
+    // Call the primary API
+    final primaryUrl = Uri.parse(
+      '$primaryBaseUrl?api-key=$primaryApiKey&format=json&filters[state]=${Uri.encodeComponent(defaultState)}',
+    );
+    final primaryResponse = await http.get(primaryUrl);
+
+    if (primaryResponse.statusCode == 200) {
+      // Parse the response from the primary API
+      final data = json.decode(primaryResponse.body);
+      final records = data['records'] as List<dynamic>?;
+
+      if (records != null && records.isNotEmpty) {
+        setState(() {
+          _marketData = records.map((record) => {
+            'commodity': record['commodity'] ?? '',
+            'price': record['modal_price'] ?? '0.0',
+            'trend': _calculateTrend(record['modal_price']),
+            'market': record['market'] ?? '',
+            'state': record['state'] ?? '',
+          }).toList();
+        });
+        return; // Exit the method if primary API succeeds
+      } else {
+        // Handle empty response from primary API
+        print("Primary API returned empty records");
+        await _fetchBackupApiData();
+      }
     } else {
-      throw Exception('Failed to load market data');
+      // Handle unsuccessful primary API call
+      print("Primary API failed with status: ${primaryResponse.statusCode}");
+      await _fetchBackupApiData();
     }
   } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error fetching market data: $e')),
-    );
+    print("Error in primary API: $e");
+    await _fetchBackupApiData();
   }
+}
+
+Future<void> _fetchBackupApiData() async {
+  final String backupBaseUrl = "https://market-api-m222.onrender.com/api/commodities/state/Maharashtra";
+
+  try {
+    // Call the backup API
+    final backupUrl = Uri.parse(backupBaseUrl);
+    final backupResponse = await http.get(backupUrl);
+
+    if (backupResponse.statusCode == 200) {
+      // Parse the response from the backup API
+      final backupData = json.decode(backupResponse.body);
+      final records = backupData['records'] as List<dynamic>?;
+
+      if (records != null && records.isNotEmpty) {
+        setState(() {
+          _marketData = records.map((record) => {
+            'commodity': record['commodity'] ?? '',
+            'price': record['modal_price'] ?? '0.0',
+            'trend': _calculateTrend(record['modal_price']),
+            'market': record['market'] ?? '',
+            'state': record['state'] ?? '',
+          }).toList();
+        });
+      } else {
+        // Handle empty response from backup API
+        print("Backup API returned empty records");
+        _showErrorSnackBar('No data found in backup API');
+      }
+    } else {
+      // Handle unsuccessful backup API call
+      print("Backup API failed with status: ${backupResponse.statusCode}");
+      _showErrorSnackBar('Backup API failed with status: ${backupResponse.statusCode}');
+    }
+  } catch (backupError) {
+    print("Error in backup API: $backupError");
+    _showErrorSnackBar('Error fetching market data: $backupError');
+  }
+}
+
+void _showErrorSnackBar(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      duration: Duration(seconds: 3),
+    ),
+  );
 }
 
 String _calculateTrend(String currentPrice) {
@@ -1322,6 +1444,7 @@ Widget _buildMarketCard(Map<String, dynamic> item) {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    _buildFarmerDetails(),
                     _buildWeatherSection(),
                     const SizedBox(height: 16),
                     _buildMapSection(),
@@ -1337,7 +1460,171 @@ Widget _buildMarketCard(Map<String, dynamic> item) {
             ),
     );
   }
+Widget _buildFarmerDetails() {
+  final user = FirebaseAuth.instance.currentUser;
 
+  return Card(
+    elevation: 6,
+    margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16.0),
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Greeting with farmer's name and level badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  '👋 Hello, ${_farmerName ?? 'Farmer'}!',
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[800],
+                      ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.orange[100],
+                  borderRadius: BorderRadius.circular(16.0),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.star, size: 18, color: Colors.orange),
+                    SizedBox(width: 4),
+                    Text(
+                      'Beginner Level',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 16, 16, 16),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(color: Colors.grey[300]), // Separator line
+          const SizedBox(height: 12),
+
+          // City and location details
+          Row(
+            children: [
+              const Icon(Icons.location_pin, size: 28, color: Colors.blue),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  _cityName ?? 'Fetching city...',
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Land size
+          Row(
+            children: [
+              const Icon(Icons.landscape, size: 28, color: Colors.brown),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Land Size: ${_landsize ?? 'Unknown'} acres',
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Earthworm User ID section
+          Padding(
+            padding: const EdgeInsets.only(top: 12.0),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Colors.green, Colors.lightGreen],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(8.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color.fromARGB(255, 111, 112, 111).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.perm_identity, size: 18, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Earthworm User ID',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy, color: Colors.white),
+                          onPressed: () {
+                            if (user?.uid != null) {
+                              Clipboard.setData(ClipboardData(text: user!.uid));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('User ID copied to clipboard!')),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Styled User ID
+                    Text(
+                      user?.uid ?? 'Fetching...',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
   @override
   void dispose() {
     _marketScrollTimer?.cancel();
