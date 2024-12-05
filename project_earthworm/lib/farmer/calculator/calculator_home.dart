@@ -78,6 +78,10 @@ class CalculatorHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text('Smart Farming Calculators'),
         backgroundColor: Color(0xFF1B5E20).withOpacity(0.8),
       ),
