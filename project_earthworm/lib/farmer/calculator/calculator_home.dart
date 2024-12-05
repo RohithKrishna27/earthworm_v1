@@ -11,174 +11,177 @@ import 'calculator_screen/planting.dart';
 import 'calculator_screen/livestock.dart';
 
 class CalculatorHomeScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> calculatorOptions = [
-    {
-      'title': 'Crop Yield',
-      'screen': CropYieldScreen(),
-      'icon': Icons.agriculture,
-      'description': 'Estimate crop production',
-      'gradient': [Color(0xFFFF6B6B), Color(0xFFFFA06B)]
-    },
-    {
-      'title': 'Input Cost',
-      'screen': InputCostManagementScreen(),
-      'icon': Icons.attach_money,
-      'description': 'Manage input expenses',
-      'gradient': [Color(0xFF4ECDC4), Color(0xFF45B7D1)]
-    },
-    {
-      'title': 'Irrigation',
-      'screen': IrrigationRequirementsScreen(),
-      'icon': Icons.water_drop,
-      'description': 'Water management',
-      'gradient': [Color(0xFF5D3FD3), Color(0xFF7B68EE)]
-    },
-    {
-      'title': 'Profit Analysis',
-      'screen': ProfitLossCalculatorScreen(),
-      'icon': Icons.analytics,
-      'description': 'Financial performance',
-      'gradient': [Color(0xFFFFD700), Color(0xFFFFA500)]
-    },
-    {
-      'title': 'Soil Fertility',
-      'screen': SoilFertilityScreen(),
-      'icon': Icons.grass,
-      'description': 'Soil nutrient analysis',
-      'gradient': [Color(0xFF2E8B57), Color(0xFF3CB371)]
-    },
-    {
-      'title': 'Pest Management',
-      'screen': PestDiseaseManagementScreen(),
-      'icon': Icons.bug_report,
-      'description': 'Pest control strategy',
-      'gradient': [Color(0xFFFF4500), Color(0xFFFF6347)]
-    },
-    {
-      'title': 'Market Price',
-      'screen': MarketPriceScreen(),
-      'icon': Icons.trending_up,
-      'description': 'Price trend analysis',
-      'gradient': [Color(0xFF1E90FF), Color(0xFF4169E1)]
-    },
-    {
-      'title': 'Loan Calculator',
-      'screen': LoanSubsidyCalculatorScreen(),
-      'icon': Icons.account_balance,
-      'description': 'Financial planning',
-      'gradient': [Color(0xFF9370DB), Color(0xFFBA55D3)]
-    },
-    {
-      'title': 'Planting Schedule',
-      'screen': PlantingHarvestingScheduleScreen(),
-      'icon': Icons.calendar_month,
-      'description': 'Crop timeline planning',
-      'gradient': [Color(0xFF20B2AA), Color(0xFF00CED1)]
-    },
-    {
-      'title': 'Livestock Feed',
-      'screen': LivestockFeedCalculatorScreen(),
-      'icon': Icons.pets,
-      'description': 'Animal nutrition',
-      'gradient': [Color(0xFFCD5C5C), Color(0xFFF08080)]
-    },
+  final List<CalculatorInfo> calculators = [
+    CalculatorInfo(
+      title: 'Crop Yield',
+      description: 'Estimate crop production',
+      screen: CropYieldScreen(),
+      icon: Icons.agriculture,
+    ),
+    CalculatorInfo(
+      title: 'Input Cost',
+      description: 'Manage input expenses',
+      screen: InputCostManagementScreen(),
+      icon: Icons.attach_money,
+    ),
+    CalculatorInfo(
+      title: 'Irrigation',
+      description: 'Water management',
+      screen: IrrigationRequirementsScreen(),
+      icon: Icons.water_drop,
+    ),
+    CalculatorInfo(
+      title: 'Profit Analysis',
+      description: 'Financial performance',
+      screen: ProfitLossCalculatorScreen(),
+      icon: Icons.analytics,
+    ),
+    CalculatorInfo(
+      title: 'Soil Fertility',
+      description: 'Soil nutrient analysis',
+      screen: SoilFertilityScreen(),
+      icon: Icons.grass,
+    ),
+    CalculatorInfo(
+      title: 'Pest Management',
+      description: 'Pest control strategy',
+      screen: PestDiseaseManagementScreen(),
+      icon: Icons.bug_report,
+    ),
+    CalculatorInfo(
+      title: 'Market Price',
+      description: 'Price trend analysis',
+      screen: MarketPriceScreen(),
+      icon: Icons.trending_up,
+    ),
+    CalculatorInfo(
+      title: 'Loan Calculator',
+      description: 'Financial planning',
+      screen: LoanSubsidyCalculatorScreen(),
+      icon: Icons.account_balance,
+    ),
+    CalculatorInfo(
+      title: 'Planting Schedule',
+      description: 'Crop timeline planning',
+      screen: PlantingHarvestingScheduleScreen(),
+      icon: Icons.calendar_month,
+    ),
+    CalculatorInfo(
+      title: 'Livestock Feed',
+      description: 'Animal nutrition',
+      screen: LivestockFeedCalculatorScreen(),
+      icon: Icons.pets,
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Smart Farming Calculators',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Color.fromARGB(255, 37, 155, 131),
-        elevation: 0,
+        title: Text('Smart Farming Calculators'),
+        backgroundColor: Color(0xFF1B5E20).withOpacity(0.8),
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.green[50]!, Colors.green[100]!],
+            colors: [
+              Color(0xFF1B5E20).withOpacity(0.1),
+              Colors.white,
+              Color(0xFF66BB6A).withOpacity(0.1),
+            ],
           ),
         ),
-        child: SafeArea(
-          child: GridView.builder(
-            padding: EdgeInsets.all(12),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.85,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+        child: ListView.builder(
+          padding: EdgeInsets.all(16),
+          itemCount: calculators.length,
+          itemBuilder: (context, index) {
+            return _buildCalculatorCard(context, calculators[index]);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalculatorCard(BuildContext context, CalculatorInfo info) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => info.screen,
             ),
-            itemCount: calculatorOptions.length,
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => calculatorOptions[index]['screen'],
-                    ),
-                  );
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: calculatorOptions[index]['gradient'],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        offset: Offset(0, 4),
-                        blurRadius: 5.0,
-                      )
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        calculatorOptions[index]['icon'],
-                        size: 48,
-                        color: Colors.white,
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        calculatorOptions[index]['title'],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 1.1,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        calculatorOptions[index]['description'],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
+          );
+        },
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1B5E20).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              );
-            },
+                child: Icon(
+                  info.icon,
+                  color: Color(0xFF1B5E20),
+                  size: 24,
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      info.title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1B5E20),
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      info.description,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Color(0xFF1B5E20),
+                size: 16,
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
+
+class CalculatorInfo {
+  final String title;
+  final String description;
+  final Widget screen;
+  final IconData icon;
+
+  CalculatorInfo({
+    required this.title,
+    required this.description,
+    required this.screen,
+    required this.icon,
+  });
 }
