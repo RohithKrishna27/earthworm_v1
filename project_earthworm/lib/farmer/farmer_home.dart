@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_earthworm/farmer/calculator/calculator_home.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
+import 'package:project_earthworm/farmer/farmer_profile.dart';
 
 class FarmerHome extends StatefulWidget {
   @override
@@ -15,7 +16,7 @@ class _FarmerHomeState extends State<FarmerHome> {
     HomeScreen(),
     CalculatorHomeScreen(),
     OnboardingScreen(),
-   
+    FormerProfile(),
   ];
 
   void _onItemTapped(int index) {
@@ -35,6 +36,7 @@ class _FarmerHomeState extends State<FarmerHome> {
         unselectedItemColor: Colors.grey,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -155,8 +157,8 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLargeFeatureBox(BuildContext context, String title, String subtitle,
-      IconData icon, String route, Color color, double width) {
+  Widget _buildLargeFeatureBox(BuildContext context, String title,
+      String subtitle, IconData icon, String route, Color color, double width) {
     return Container(
       width: width,
       margin: EdgeInsets.only(bottom: 24),

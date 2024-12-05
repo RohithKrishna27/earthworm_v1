@@ -48,12 +48,10 @@ class FirebaseService {
   // Check if farmer profile exists
   Future<bool> checkFarmerProfileExists() async {
     if (currentUserId == null) return false;
-    
-    final docSnapshot = await _firestore
-        .collection('farmers')
-        .doc(currentUserId)
-        .get();
-    
+
+    final docSnapshot =
+        await _firestore.collection('farmers').doc(currentUserId).get();
+
     return docSnapshot.exists;
   }
 
@@ -61,11 +59,9 @@ class FirebaseService {
   Future<Map<String, dynamic>?> getFarmerProfile() async {
     if (currentUserId == null) return null;
 
-    final docSnapshot = await _firestore
-        .collection('farmers')
-        .doc(currentUserId)
-        .get();
-    
+    final docSnapshot =
+        await _firestore.collection('farmers').doc(currentUserId).get();
+
     return docSnapshot.data();
   }
 
@@ -127,8 +123,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   String? _selectedFarmingMethod;
   Position? _currentPosition;
   bool _isLoading = false;
- final FirebaseService _firebaseService = FirebaseService();
-  
+  final FirebaseService _firebaseService = FirebaseService();
 
   final List<String> _farmingMethods = [
     'Organic Farming',
@@ -142,65 +137,67 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     _getCurrentLocation();
-        _checkExistingProfile();
-
+    _checkExistingProfile();
   }
-Future<void> _checkExistingProfile() async {
-  setState(() => _isLoading = true);
 
-  try {
-    // Check if user is logged in
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      // If no user, trigger authentication or registration
-      await _registerOrSignInUser();
-      return;
-    }
+  Future<void> _checkExistingProfile() async {
+    setState(() => _isLoading = true);
 
-    // Check Firestore for existing profile
-    DocumentSnapshot profileDoc = await FirebaseFirestore.instance
-        .collection('farmers')
-        .doc(currentUser.uid)
-        .get();
-
-    if (profileDoc.exists) {
-      // Profile exists, navigate to dashboard
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => FarmerDashboard(
-              farmerId: currentUser.uid,
-            ),
-          ),
-        );
+    try {
+      // Check if user is logged in
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        // If no user, trigger authentication or registration
+        await _registerOrSignInUser();
+        return;
       }
-    } else {
-      // No profile exists, stay on onboarding screen
+
+      // Check Firestore for existing profile
+      DocumentSnapshot profileDoc = await FirebaseFirestore.instance
+          .collection('farmers')
+          .doc(currentUser.uid)
+          .get();
+
+      if (profileDoc.exists) {
+        // Profile exists, navigate to dashboard
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => FarmerDashboard(
+                farmerId: currentUser.uid,
+              ),
+            ),
+          );
+        }
+      } else {
+        // No profile exists, stay on onboarding screen
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      // Handle any errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error checking profile: $e')),
+      );
       setState(() => _isLoading = false);
     }
-  } catch (e) {
-    // Handle any errors
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error checking profile: $e')),
-    );
-    setState(() => _isLoading = false);
   }
-}
 
-Future<void> _registerOrSignInUser() async {
-  try {
-    // Perform anonymous sign-in
-    UserCredential userCredential = await FirebaseAuth.instance.signInAnonymously();
-    
-    // Trigger profile check again
-    await _checkExistingProfile();
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Authentication error: $e')),
-    );
+  Future<void> _registerOrSignInUser() async {
+    try {
+      // Perform anonymous sign-in
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInAnonymously();
+
+      // Trigger profile check again
+      await _checkExistingProfile();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Authentication error: $e')),
+      );
+    }
   }
-}
+
   Future<void> _getCurrentLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -226,50 +223,52 @@ Future<void> _registerOrSignInUser() async {
     }
   }
 
-Future<void> _submitForm() async {
-  if (!_formKey.currentState!.validate() || _currentPosition == null) return;
+  Future<void> _submitForm() async {
+    if (!_formKey.currentState!.validate() || _currentPosition == null) return;
 
-  try {
-    setState(() => _isLoading = true);
+    try {
+      setState(() => _isLoading = true);
 
-    // Get current authenticated user
-    User? currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null) {
-      throw Exception('No user logged in');
-    }
+      // Get current authenticated user
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('No user logged in');
+      }
 
-    // Store profile in Firestore using user's UID
-    await FirebaseFirestore.instance
-        .collection('farmers')
-        .doc(currentUser.uid)
-        .set({
-      'name': _nameController.text,
-      'landSize': double.parse(_landSizeController.text),
-      'farmingMethod': _selectedFarmingMethod,
-      'location': GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
-      'createdAt': FieldValue.serverTimestamp(),
-      'onboardingComplete': true,  // Add this flag
-    });
+      // Store profile in Firestore using user's UID
+      await FirebaseFirestore.instance
+          .collection('farmers')
+          .doc(currentUser.uid)
+          .set({
+        'name': _nameController.text,
+        'landSize': double.parse(_landSizeController.text),
+        'farmingMethod': _selectedFarmingMethod,
+        'location':
+            GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
+        'createdAt': FieldValue.serverTimestamp(),
+        'onboardingComplete': true, // Add this flag
+      });
 
-    // Navigate to dashboard
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FarmerDashboard(
-            farmerId: currentUser.uid,
+      // Navigate to dashboard
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => FarmerDashboard(
+              farmerId: currentUser.uid,
+            ),
           ),
-        ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving data: $e')),
       );
+    } finally {
+      setState(() => _isLoading = false);
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error saving data: $e')),
-    );
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -289,8 +288,9 @@ Future<void> _submitForm() async {
                         labelText: 'Farmer Name',
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) =>
-                          value?.isEmpty ?? true ? 'Please enter your name' : null,
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Please enter your name'
+                          : null,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -325,8 +325,9 @@ Future<void> _submitForm() async {
                           .toList(),
                       onChanged: (value) =>
                           setState(() => _selectedFarmingMethod = value),
-                      validator: (value) =>
-                          value == null ? 'Please select a farming method' : null,
+                      validator: (value) => value == null
+                          ? 'Please select a farming method'
+                          : null,
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
@@ -355,13 +356,14 @@ class FarmerDashboard extends StatefulWidget {
   final String farmerId;
 
   const FarmerDashboard({
-    Key? key, 
+    Key? key,
     required this.farmerId,
   }) : super(key: key);
 
   @override
   _FarmerDashboardState createState() => _FarmerDashboardState();
 }
+
 class _FarmerDashboardState extends State<FarmerDashboard> {
   Position? _currentPosition;
   Map<String, dynamic>? _weatherData;
@@ -369,16 +371,17 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
   bool _isLoading = true;
   GoogleMapController? _mapController;
   int _currentMarketIndex = 0;
-    final FirebaseService _firebaseService = FirebaseService();
+  final FirebaseService _firebaseService = FirebaseService();
   Timer? _marketScrollTimer;
   final CarouselController _carouselController = CarouselController();
-  
+
   // Add this line to define the _farmingZones Set
   Set<Circle> _farmingZones = {};
 
   // Financial tracking controllers
   final TextEditingController _expenseNameController = TextEditingController();
-  final TextEditingController _expenseAmountController = TextEditingController();
+  final TextEditingController _expenseAmountController =
+      TextEditingController();
   final TextEditingController _incomeSourceController = TextEditingController();
   final TextEditingController _incomeAmountController = TextEditingController();
 
@@ -387,72 +390,70 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _unitPriceController = TextEditingController();
 
+  String? _farmerName; // To store the farmer's name
+  String? _cityName; // To store the city name
+  String? _landsize; // To store the land size
 
+  Future<void> _fetchFarmerDetails() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
 
-String? _farmerName; // To store the farmer's name
-String? _cityName; // To store the city name
-String? _landsize; // To store the land size
+      // Fetch farmer details from Firestore
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('farmers')
+          .doc(user.uid)
+          .get();
 
-Future<void> _fetchFarmerDetails() async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+      if (docSnapshot.exists) {
+        setState(() {
+          _farmerName = docSnapshot.get('name');
+          _landsize =
+              docSnapshot.get('landsize')?.toString(); // Fetch land size
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching farmer details: $e')),
+      );
+    }
+  }
 
-    // Fetch farmer details from Firestore
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('farmers')
-        .doc(user.uid)
-        .get();
+  Future<void> _fetchCityName() async {
+    if (_currentPosition == null) return;
 
-    if (docSnapshot.exists) {
+    try {
+      // Get placemarks using reverse geocoding
+      final placemarks = await placemarkFromCoordinates(
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        setState(() {
+          _cityName = placemarks.first.locality ?? 'Unknown City';
+        });
+      } else {
+        setState(() {
+          _cityName = 'Unknown City';
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching city name: $e')),
+      );
       setState(() {
-        _farmerName = docSnapshot.get('name');
-        _landsize = docSnapshot.get('landsize')?.toString(); // Fetch land size
-
+        _cityName = 'Error fetching city';
       });
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error fetching farmer details: $e')),
-    );
   }
-}
 
-Future<void> _fetchCityName() async {
-  if (_currentPosition == null) return;
-
-  try {
-    // Get placemarks using reverse geocoding
-    final placemarks = await placemarkFromCoordinates(
-      _currentPosition!.latitude,
-      _currentPosition!.longitude,
-    );
-
-    if (placemarks.isNotEmpty) {
-      setState(() {
-        _cityName = placemarks.first.locality ?? 'Unknown City';
-      });
-    } else {
-      setState(() {
-        _cityName = 'Unknown City';
-      });
-    }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error fetching city name: $e')),
-    );
-    setState(() {
-      _cityName = 'Error fetching city';
-    });
-  }
-}
   @override
   void initState() {
     super.initState();
     _initializeData();
     _startMarketScroll();
-      _fetchFarmerDetails(); // Fetch farmer details
-
+    _fetchFarmerDetails(); // Fetch farmer details
   }
 
   void _startMarketScroll() {
@@ -477,529 +478,540 @@ Future<void> _fetchCityName() async {
     }
   }
 
- // Add these functions to the _FarmerDashboardState class
+  // Add these functions to the _FarmerDashboardState class
 
-Future<void> _getCurrentLocation() async {
-  try {
-    // First check if location services are enabled
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enable location services')),
-        );
-      }
-      return;
-    }
-
-    // Then check & request permission
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
+  Future<void> _getCurrentLocation() async {
+    try {
+      // First check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permission denied')),
+            const SnackBar(content: Text('Please enable location services')),
           );
         }
         return;
       }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location permissions permanently denied. Please enable in settings.'),
-            duration: Duration(seconds: 3),
+      // Then check & request permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Location permission denied')),
+            );
+          }
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Location permissions permanently denied. Please enable in settings.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Get current position with high accuracy
+      setState(() => _isLoading = true);
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 5),
+      );
+
+      setState(() {
+        _currentPosition = position;
+        _isLoading = false;
+      });
+
+      // Update map camera position
+      if (_mapController != null) {
+        _mapController!.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 15,
+            ),
           ),
         );
       }
-      return;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error getting location: $e')),
+        );
+      }
+      setState(() => _isLoading = false);
     }
+  }
 
-    // Get current position with high accuracy
-    setState(() => _isLoading = true);
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-      timeLimit: const Duration(seconds: 5),
-    );
+  void _updateFarmingZones() {
+    if (_weatherData == null || _currentPosition == null) return;
+
+    final current = _weatherData!['current'];
+    final forecast = _weatherData!['forecast']['forecastday'];
+
+    // Convert values to double safely
+    double temp = toDouble(current['temp_c']);
+    double humidity = toDouble(current['humidity']);
+    double windSpeed = toDouble(current['wind_kph']);
+    double rainfall = 0.0;
+
+    // Calculate average rainfall from forecast
+    for (var day in forecast) {
+      rainfall += toDouble(day['day']['totalprecip_mm']);
+    }
+    rainfall /= forecast.length;
+
+    // Create zones based on conditions
+    Set<Circle> newZones = {
+      // Main farming zone
+      Circle(
+        circleId: const CircleId('optimal_zone'),
+        center: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        radius: 1000, // 1km radius
+        fillColor: _getZoneColor(temp, humidity, rainfall),
+        strokeWidth: 2,
+        strokeColor: Colors.green,
+      ),
+      // Buffer zone
+      Circle(
+        circleId: const CircleId('buffer_zone'),
+        center: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        radius: 1500, // 1.5km radius
+        fillColor: Colors.yellow.withOpacity(0.1),
+        strokeWidth: 1,
+        strokeColor: Colors.yellow,
+      ),
+      // Risk zone - if conditions are unfavorable
+      if (temp > 35 || humidity > 85 || windSpeed > 25)
+        Circle(
+          circleId: const CircleId('risk_zone'),
+          center:
+              LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+          radius: 2000, // 2km radius
+          fillColor: Colors.red.withOpacity(0.1),
+          strokeWidth: 1,
+          strokeColor: Colors.red,
+        ),
+    };
 
     setState(() {
-      _currentPosition = position;
-      _isLoading = false;
+      _farmingZones = newZones;
     });
+  }
 
-    // Update map camera position
-    if (_mapController != null) {
-      _mapController!.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: LatLng(position.latitude, position.longitude),
-            zoom: 15,
-          ),
-        ),
-      );
+  Color _getZoneColor(double temp, double humidity, double rainfall) {
+    // Optimal conditions
+    if (temp >= 20 &&
+        temp <= 30 &&
+        humidity >= 60 &&
+        humidity <= 80 &&
+        rainfall >= 2) {
+      return Colors.green.withOpacity(0.3);
     }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error getting location: $e')),
-      );
+    // Moderate conditions
+    else if (temp >= 15 && temp <= 35 && humidity >= 40 && humidity <= 90) {
+      return Colors.yellow.withOpacity(0.3);
     }
-    setState(() => _isLoading = false);
-  }
-}
-
-void _updateFarmingZones() {
-  if (_weatherData == null || _currentPosition == null) return;
-
-  final current = _weatherData!['current'];
-  final forecast = _weatherData!['forecast']['forecastday'];
-
-  // Convert values to double safely
-  double temp = toDouble(current['temp_c']);
-  double humidity = toDouble(current['humidity']);
-  double windSpeed = toDouble(current['wind_kph']);
-  double rainfall = 0.0;
-  
-  // Calculate average rainfall from forecast
-  for (var day in forecast) {
-    rainfall += toDouble(day['day']['totalprecip_mm']);
-  }
-  rainfall /= forecast.length;
-
-  // Create zones based on conditions
-  Set<Circle> newZones = {
-    // Main farming zone
-    Circle(
-      circleId: const CircleId('optimal_zone'),
-      center: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-      radius: 1000, // 1km radius
-      fillColor: _getZoneColor(temp, humidity, rainfall),
-      strokeWidth: 2,
-      strokeColor: Colors.green,
-    ),
-    // Buffer zone
-    Circle(
-      circleId: const CircleId('buffer_zone'),
-      center: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-      radius: 1500, // 1.5km radius
-      fillColor: Colors.yellow.withOpacity(0.1),
-      strokeWidth: 1,
-      strokeColor: Colors.yellow,
-    ),
-    // Risk zone - if conditions are unfavorable
-    if (temp > 35 || humidity > 85 || windSpeed > 25)
-      Circle(
-        circleId: const CircleId('risk_zone'),
-        center: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-        radius: 2000, // 2km radius
-        fillColor: Colors.red.withOpacity(0.1),
-        strokeWidth: 1,
-        strokeColor: Colors.red,
-      ),
-  };
-
-  setState(() {
-    _farmingZones = newZones;
-  });
-}
-
-Color _getZoneColor(double temp, double humidity, double rainfall) {
-  // Optimal conditions
-  if (temp >= 20 && temp <= 30 && humidity >= 60 && humidity <= 80 && rainfall >= 2) {
-    return Colors.green.withOpacity(0.3);
-  }
-  // Moderate conditions
-  else if (temp >= 15 && temp <= 35 && humidity >= 40 && humidity <= 90) {
-    return Colors.yellow.withOpacity(0.3);
-  }
-  // Poor conditions
-  else {
-    return Colors.red.withOpacity(0.3);
-  }
-}
-
-Widget _buildMapSection() {
-  if (_currentPosition == null) {
-    return Card(
-      child: Container(
-        height: 300,
-        padding: const EdgeInsets.all(16.0),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Accessing location...'),
-            ],
-          ),
-        ),
-      ),
-    );
+    // Poor conditions
+    else {
+      return Colors.red.withOpacity(0.3);
+    }
   }
 
-  return SizedBox(
-    height: 300,
-    child: Card(
-      elevation: 4,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildMapSection() {
+    if (_currentPosition == null) {
+      return Card(
+        child: Container(
+          height: 300,
+          padding: const EdgeInsets.all(16.0),
+          child: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-  'Farm Location & Weather Zones\nತೋಟ ಸ್ಥಳ ಮತ್ತು ಹವಾಮಾನ ವಲಯಗಳು',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.my_location),
-                  onPressed: () {
-                    _getCurrentLocation();
-                    _updateFarmingZones();
-                  },
-                ),
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Accessing location...'),
               ],
             ),
           ),
-          Expanded(
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(
-                  _currentPosition!.latitude,
-                  _currentPosition!.longitude,
-                ),
-                zoom: 15,
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 300,
+      child: Card(
+        elevation: 4,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Farm Location & Weather Zones\nತೋಟ ಸ್ಥಳ ಮತ್ತು ಹವಾಮಾನ ವಲಯಗಳು',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.my_location),
+                    onPressed: () {
+                      _getCurrentLocation();
+                      _updateFarmingZones();
+                    },
+                  ),
+                ],
               ),
-              markers: {
-                Marker(
-                  markerId: const MarkerId('farm_location'),
-                  position: LatLng(
+            ),
+            Expanded(
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(
                     _currentPosition!.latitude,
                     _currentPosition!.longitude,
                   ),
-                  infoWindow: InfoWindow(
-                    title: 'Your Farm',
-                    snippet: 'Temp: ${_weatherData?['current']['temp_c'].toStringAsFixed(1)}°C',
-                  ),
+                  zoom: 15,
                 ),
-              },
-              circles: _farmingZones,
-              onMapCreated: (controller) {
-                _mapController = controller;
-                _updateFarmingZones();
-              },
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              mapType: MapType.hybrid,
+                markers: {
+                  Marker(
+                    markerId: const MarkerId('farm_location'),
+                    position: LatLng(
+                      _currentPosition!.latitude,
+                      _currentPosition!.longitude,
+                    ),
+                    infoWindow: InfoWindow(
+                      title: 'Your Farm',
+                      snippet:
+                          'Temp: ${_weatherData?['current']['temp_c'].toStringAsFixed(1)}°C',
+                    ),
+                  ),
+                },
+                circles: _farmingZones,
+                onMapCreated: (controller) {
+                  _mapController = controller;
+                  _updateFarmingZones();
+                },
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
+                mapType: MapType.hybrid,
+              ),
             ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildZoneLegend('Optimal', Colors.green),
+                  _buildZoneLegend('Moderate', Colors.yellow),
+                  _buildZoneLegend('Risk', Colors.red),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _fetchWeatherData() async {
+    if (_currentPosition == null) return;
+
+    try {
+      final String apiKey = '5f2a93688542443d98d140812242411';
+      final url = Uri.parse('http://api.weatherapi.com/v1/forecast.json'
+          '?key=$apiKey'
+          '&q=${_currentPosition!.latitude},${_currentPosition!.longitude}'
+          '&days=7'
+          '&aqi=yes');
+
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final decodedData = json.decode(response.body);
+
+        // Ensure numeric values are properly converted to double
+        if (decodedData['current'] != null) {
+          decodedData['current']['temp_c'] =
+              (decodedData['current']['temp_c'] ?? 0).toDouble();
+          decodedData['current']['humidity'] =
+              (decodedData['current']['humidity'] ?? 0).toDouble();
+          decodedData['current']['wind_kph'] =
+              (decodedData['current']['wind_kph'] ?? 0).toDouble();
+        }
+
+        setState(() => _weatherData = decodedData);
+        _updateFarmingZones();
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching weather: $e')),
+      );
+    }
+  }
+
+  Widget _buildWeatherParameter(
+    String label,
+    String value,
+    IconData icon,
+    String tooltip,
+  ) {
+    return Tooltip(
+      message: tooltip,
+      child: Column(
+        children: [
+          Icon(icon, size: 24),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12),
+            textAlign: TextAlign.center,
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildZoneLegend('Optimal', Colors.green),
-                _buildZoneLegend('Moderate', Colors.yellow),
-                _buildZoneLegend('Risk', Colors.red),
-              ],
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
-    ),
-  );
-}
-
-
-Future<void> _fetchWeatherData() async {
-  if (_currentPosition == null) return;
-
-  try {
-    final String apiKey = '5f2a93688542443d98d140812242411';
-    final url = Uri.parse(
-      'http://api.weatherapi.com/v1/forecast.json'
-      '?key=$apiKey'
-      '&q=${_currentPosition!.latitude},${_currentPosition!.longitude}'
-      '&days=7'
-      '&aqi=yes'
-    );
-
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      final decodedData = json.decode(response.body);
-      
-      // Ensure numeric values are properly converted to double
-      if (decodedData['current'] != null) {
-        decodedData['current']['temp_c'] = (decodedData['current']['temp_c'] ?? 0).toDouble();
-        decodedData['current']['humidity'] = (decodedData['current']['humidity'] ?? 0).toDouble();
-        decodedData['current']['wind_kph'] = (decodedData['current']['wind_kph'] ?? 0).toDouble();
-      }
-
-      setState(() => _weatherData = decodedData);
-      _updateFarmingZones();
-    }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error fetching weather: $e')),
     );
   }
-}
-
-Widget _buildWeatherParameter(
-  String label, 
-  String value, 
-  IconData icon,
-  String tooltip,
-) {
-  return Tooltip(
-    message: tooltip,
-    child: Column(
-      children: [
-        Icon(icon, size: 24),
-        const SizedBox(height: 8),
-        Text(
-          label, 
-          style: const TextStyle(fontSize: 12),
-          textAlign: TextAlign.center,
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    ),
-  );
-}
 
 // Helper function to safely convert dynamic values to double
-double toDouble(dynamic value) {
-  if (value == null) return 0.0;
-  if (value is double) return value;
-  if (value is int) return value.toDouble();
-  if (value is String) return double.tryParse(value) ?? 0.0;
-  return 0.0;
-}
+  double toDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
 
+  Widget _buildWeatherSection() {
+    if (_weatherData == null) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text('Weather data unavailable'),
+        ),
+      );
+    }
 
-Widget _buildWeatherSection() {
-  if (_weatherData == null) {
-    return const Card(
+    final current = _weatherData!['current'];
+    final forecast = _weatherData!['forecast']['forecastday'][0]['day'];
+
+    return Card(
+      elevation: 4,
       child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text('Weather data unavailable'),
-      ),
-    );
-  }
-
-  final current = _weatherData!['current'];
-  final forecast = _weatherData!['forecast']['forecastday'][0]['day'];
-
-  return Card(
-    elevation: 4,
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Farming Weather Conditions/ಕೃಷಿ ಹವಾಮಾನ ಪರಿಸ್ಥಿತಿಗಳು',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildWeatherParameter(
-                'Temperature',
-                '${current['temp_c'].toStringAsFixed(1)}°C',
-                Icons.thermostat,
-                'Optimal: 20-30°C',
-              ),
-              _buildWeatherParameter(
-                'Soil Moisture',
-                '${current['humidity']}%',
-                Icons.water_drop,
-                'Ideal: 60-80%',
-              ),
-              _buildWeatherParameter(
-                'Wind Speed',
-                '${current['wind_kph'].toStringAsFixed(1)} km/h',
-                Icons.air,
-                'Safe: <20 km/h',
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildWeatherParameter(
-                'Rainfall',
-                '${forecast['totalprecip_mm']} mm',
-                Icons.umbrella,
-                'Expected today',
-              ),
-              _buildWeatherParameter(
-                'UV Index',
-                current['uv'].toString(),
-                Icons.wb_sunny,
-                'Protection needed: >3',
-              ),
-              _buildWeatherParameter(
-                'Pest Risk',
-                _calculatePestRisk(current['temp_c'], current['humidity']),
-                Icons.bug_report,
-                'Based on conditions',
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-String _calculatePestRisk(double temp, double humidity) {
-  if (temp > 25 && humidity > 70) {
-    return 'High';
-  } else if (temp > 20 && humidity > 60) {
-    return 'Medium';
-  } else {
-    return 'Low';
-  }
-}
-
-
-
-
-Widget _buildZoneLegend(String label, Color color) {
-  return Row(
-    children: [
-      Container(
-        width: 16,
-        height: 16,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.3),
-          border: Border.all(color: color),
-          borderRadius: BorderRadius.circular(4),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Farming Weather Conditions/ಕೃಷಿ ಹವಾಮಾನ ಪರಿಸ್ಥಿತಿಗಳು',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildWeatherParameter(
+                  'Temperature',
+                  '${current['temp_c'].toStringAsFixed(1)}°C',
+                  Icons.thermostat,
+                  'Optimal: 20-30°C',
+                ),
+                _buildWeatherParameter(
+                  'Soil Moisture',
+                  '${current['humidity']}%',
+                  Icons.water_drop,
+                  'Ideal: 60-80%',
+                ),
+                _buildWeatherParameter(
+                  'Wind Speed',
+                  '${current['wind_kph'].toStringAsFixed(1)} km/h',
+                  Icons.air,
+                  'Safe: <20 km/h',
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildWeatherParameter(
+                  'Rainfall',
+                  '${forecast['totalprecip_mm']} mm',
+                  Icons.umbrella,
+                  'Expected today',
+                ),
+                _buildWeatherParameter(
+                  'UV Index',
+                  current['uv'].toString(),
+                  Icons.wb_sunny,
+                  'Protection needed: >3',
+                ),
+                _buildWeatherParameter(
+                  'Pest Risk',
+                  _calculatePestRisk(current['temp_c'], current['humidity']),
+                  Icons.bug_report,
+                  'Based on conditions',
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-      const SizedBox(width: 4),
-      Text(label),
-    ],
-  );
-}
-Future<void> _fetchMarketData() async {
-  final String primaryBaseUrl = "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070";
-  final String primaryApiKey = "579b464db66ec23bdd000001e3c6f8ed17cb4769425e0176dc5b7318";
-  final String backupBaseUrl = "https://market-api-m222.onrender.com/api/commodities/state/Maharashtra";
-  final String defaultState = "Maharashtra";
-
-  try {
-    // Call the primary API
-    final primaryUrl = Uri.parse(
-      '$primaryBaseUrl?api-key=$primaryApiKey&format=json&filters[state]=${Uri.encodeComponent(defaultState)}',
     );
-    final primaryResponse = await http.get(primaryUrl);
+  }
 
-    if (primaryResponse.statusCode == 200) {
-      // Parse the response from the primary API
-      final data = json.decode(primaryResponse.body);
-      final records = data['records'] as List<dynamic>?;
+  String _calculatePestRisk(double temp, double humidity) {
+    if (temp > 25 && humidity > 70) {
+      return 'High';
+    } else if (temp > 20 && humidity > 60) {
+      return 'Medium';
+    } else {
+      return 'Low';
+    }
+  }
 
-      if (records != null && records.isNotEmpty) {
-        setState(() {
-          _marketData = records.map((record) => {
-            'commodity': record['commodity'] ?? '',
-            'price': record['modal_price'] ?? '0.0',
-            'trend': _calculateTrend(record['modal_price']),
-            'market': record['market'] ?? '',
-            'state': record['state'] ?? '',
-          }).toList();
-        });
-        return; // Exit the method if primary API succeeds
+  Widget _buildZoneLegend(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.3),
+            border: Border.all(color: color),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(label),
+      ],
+    );
+  }
+
+  Future<void> _fetchMarketData() async {
+    final String primaryBaseUrl =
+        "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070";
+    final String primaryApiKey =
+        "579b464db66ec23bdd000001e3c6f8ed17cb4769425e0176dc5b7318";
+    final String backupBaseUrl =
+        "https://market-api-m222.onrender.com/api/commodities/state/Maharashtra";
+    final String defaultState = "Maharashtra";
+
+    try {
+      // Call the primary API
+      final primaryUrl = Uri.parse(
+        '$primaryBaseUrl?api-key=$primaryApiKey&format=json&filters[state]=${Uri.encodeComponent(defaultState)}',
+      );
+      final primaryResponse = await http.get(primaryUrl);
+
+      if (primaryResponse.statusCode == 200) {
+        // Parse the response from the primary API
+        final data = json.decode(primaryResponse.body);
+        final records = data['records'] as List<dynamic>?;
+
+        if (records != null && records.isNotEmpty) {
+          setState(() {
+            _marketData = records
+                .map((record) => {
+                      'commodity': record['commodity'] ?? '',
+                      'price': record['modal_price'] ?? '0.0',
+                      'trend': _calculateTrend(record['modal_price']),
+                      'market': record['market'] ?? '',
+                      'state': record['state'] ?? '',
+                    })
+                .toList();
+          });
+          return; // Exit the method if primary API succeeds
+        } else {
+          // Handle empty response from primary API
+          print("Primary API returned empty records");
+          await _fetchBackupApiData();
+        }
       } else {
-        // Handle empty response from primary API
-        print("Primary API returned empty records");
+        // Handle unsuccessful primary API call
+        print("Primary API failed with status: ${primaryResponse.statusCode}");
         await _fetchBackupApiData();
       }
-    } else {
-      // Handle unsuccessful primary API call
-      print("Primary API failed with status: ${primaryResponse.statusCode}");
+    } catch (e) {
+      print("Error in primary API: $e");
       await _fetchBackupApiData();
     }
-  } catch (e) {
-    print("Error in primary API: $e");
-    await _fetchBackupApiData();
   }
-}
 
-Future<void> _fetchBackupApiData() async {
-  final String backupBaseUrl = "https://market-api-m222.onrender.com/api/commodities/state/Maharashtra";
+  Future<void> _fetchBackupApiData() async {
+    final String backupBaseUrl =
+        "https://market-api-m222.onrender.com/api/commodities/state/Maharashtra";
 
-  try {
-    // Call the backup API
-    final backupUrl = Uri.parse(backupBaseUrl);
-    final backupResponse = await http.get(backupUrl);
+    try {
+      // Call the backup API
+      final backupUrl = Uri.parse(backupBaseUrl);
+      final backupResponse = await http.get(backupUrl);
 
-    if (backupResponse.statusCode == 200) {
-      // Parse the response from the backup API
-      final backupData = json.decode(backupResponse.body);
-      final records = backupData['records'] as List<dynamic>?;
+      if (backupResponse.statusCode == 200) {
+        // Parse the response from the backup API
+        final backupData = json.decode(backupResponse.body);
+        final records = backupData['records'] as List<dynamic>?;
 
-      if (records != null && records.isNotEmpty) {
-        setState(() {
-          _marketData = records.map((record) => {
-            'commodity': record['commodity'] ?? '',
-            'price': record['modal_price'] ?? '0.0',
-            'trend': _calculateTrend(record['modal_price']),
-            'market': record['market'] ?? '',
-            'state': record['state'] ?? '',
-          }).toList();
-        });
+        if (records != null && records.isNotEmpty) {
+          setState(() {
+            _marketData = records
+                .map((record) => {
+                      'commodity': record['commodity'] ?? '',
+                      'price': record['modal_price'] ?? '0.0',
+                      'trend': _calculateTrend(record['modal_price']),
+                      'market': record['market'] ?? '',
+                      'state': record['state'] ?? '',
+                    })
+                .toList();
+          });
+        } else {
+          // Handle empty response from backup API
+          print("Backup API returned empty records");
+          _showErrorSnackBar('No data found in backup API');
+        }
       } else {
-        // Handle empty response from backup API
-        print("Backup API returned empty records");
-        _showErrorSnackBar('No data found in backup API');
+        // Handle unsuccessful backup API call
+        print("Backup API failed with status: ${backupResponse.statusCode}");
+        _showErrorSnackBar(
+            'Backup API failed with status: ${backupResponse.statusCode}');
       }
-    } else {
-      // Handle unsuccessful backup API call
-      print("Backup API failed with status: ${backupResponse.statusCode}");
-      _showErrorSnackBar('Backup API failed with status: ${backupResponse.statusCode}');
+    } catch (backupError) {
+      print("Error in backup API: $backupError");
+      _showErrorSnackBar('Error fetching market data: $backupError');
     }
-  } catch (backupError) {
-    print("Error in backup API: $backupError");
-    _showErrorSnackBar('Error fetching market data: $backupError');
   }
-}
 
-void _showErrorSnackBar(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      duration: Duration(seconds: 3),
-    ),
-  );
-}
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
 
-String _calculateTrend(String currentPrice) {
-  // You can implement more sophisticated trend calculation here
-  // For now, we'll use a random trend as placeholder
-  return Random().nextBool() ? 'up' : 'down';
-}
-  
+  String _calculateTrend(String currentPrice) {
+    // You can implement more sophisticated trend calculation here
+    // For now, we'll use a random trend as placeholder
+    return Random().nextBool() ? 'up' : 'down';
+  }
 
- 
- Widget _buildMarketTrends() {
+  Widget _buildMarketTrends() {
     return Card(
       elevation: 4,
       child: Padding(
@@ -1036,59 +1048,58 @@ String _calculateTrend(String currentPrice) {
     );
   }
 
-Widget _buildMarketCard(Map<String, dynamic> item) {
-  return Card(
-    color: Colors.white,
-    elevation: 2,
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            item['commodity'],
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+  Widget _buildMarketCard(Map<String, dynamic> item) {
+    return Card(
+      color: Colors.white,
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item['commodity'],
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Market: ${item['market']}',
-            style: const TextStyle(fontSize: 14),
-          ),
-          Text(
-            'State: ${item['state']}',
-            style: const TextStyle(fontSize: 14),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '₹${item['price']}',
-                style: const TextStyle(
-                  fontSize: 24,
-                  color: Colors.green,
-                  fontWeight: FontWeight.bold,
+            const SizedBox(height: 8),
+            Text(
+              'Market: ${item['market']}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            Text(
+              'State: ${item['state']}',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '₹${item['price']}',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              Icon(
-                item['trend'] == 'up' 
-                    ? Icons.trending_up 
-                    : Icons.trending_down,
-                color: item['trend'] == 'up' 
-                    ? Colors.green 
-                    : Colors.red,
-                size: 24,
-              ),
-            ],
-          ),
-        ],
+                Icon(
+                  item['trend'] == 'up'
+                      ? Icons.trending_up
+                      : Icons.trending_down,
+                  color: item['trend'] == 'up' ? Colors.green : Colors.red,
+                  size: 24,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
   Widget _buildInventorySection() {
     return Card(
       elevation: 4,
@@ -1296,7 +1307,6 @@ Widget _buildMarketCard(Map<String, dynamic> item) {
 
   Widget _buildFinancialSummary() {
     return StreamBuilder<QuerySnapshot>(
-      
       stream: FirebaseFirestore.instance
           .collection('farmers')
           .doc(widget.farmerId)
@@ -1460,171 +1470,179 @@ Widget _buildMarketCard(Map<String, dynamic> item) {
             ),
     );
   }
-Widget _buildFarmerDetails() {
-  final user = FirebaseAuth.instance.currentUser;
 
-  return Card(
-    elevation: 6,
-    margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16.0),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Greeting with farmer's name and level badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  '👋 Hello, ${_farmerName ?? 'Farmer'}!',
-                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[800],
-                      ),
+  Widget _buildFarmerDetails() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return Card(
+      elevation: 6,
+      margin: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Greeting with farmer's name and level badge
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    '👋 Hello, ${_farmerName ?? 'Farmer'}!',
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[800],
+                        ),
+                  ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[100],
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.star, size: 18, color: Colors.orange),
+                      SizedBox(width: 4),
+                      Text(
+                        'Beginner Level',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 16, 16, 16),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Divider(color: Colors.grey[300]), // Separator line
+            const SizedBox(height: 12),
+
+            // City and location details
+            Row(
+              children: [
+                const Icon(Icons.location_pin, size: 28, color: Colors.blue),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _cityName ?? 'Fetching city...',
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Land size
+            Row(
+              children: [
+                const Icon(Icons.landscape, size: 28, color: Colors.brown),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Land Size: ${_landsize ?? 'Unknown'} acres',
+                    style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Earthworm User ID section
+            Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: Container(
+                width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.orange[100],
-                  borderRadius: BorderRadius.circular(16.0),
-                ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.star, size: 18, color: Colors.orange),
-                    SizedBox(width: 4),
-                    Text(
-                      'Beginner Level',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 16, 16, 16),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
+                  gradient: const LinearGradient(
+                    colors: [Colors.green, Colors.lightGreen],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(8.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(255, 111, 112, 111)
+                          .withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Divider(color: Colors.grey[300]), // Separator line
-          const SizedBox(height: 12),
-
-          // City and location details
-          Row(
-            children: [
-              const Icon(Icons.location_pin, size: 28, color: Colors.blue),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  _cityName ?? 'Fetching city...',
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
-                      ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Land size
-          Row(
-            children: [
-              const Icon(Icons.landscape, size: 28, color: Colors.brown),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Land Size: ${_landsize ?? 'Unknown'} acres',
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
-                      ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Earthworm User ID section
-          Padding(
-            padding: const EdgeInsets.only(top: 12.0),
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Colors.green, Colors.lightGreen],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(8.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color.fromARGB(255, 111, 112, 111).withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.perm_identity, size: 18, color: Colors.white),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Earthworm User ID',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.perm_identity,
+                              size: 18, color: Colors.white),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Earthworm User ID',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.copy, color: Colors.white),
-                          onPressed: () {
-                            if (user?.uid != null) {
-                              Clipboard.setData(ClipboardData(text: user!.uid));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('User ID copied to clipboard!')),
-                              );
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    // Styled User ID
-                    Text(
-                      user?.uid ?? 'Fetching...',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        letterSpacing: 1.5,
+                          IconButton(
+                            icon: const Icon(Icons.copy, color: Colors.white),
+                            onPressed: () {
+                              if (user?.uid != null) {
+                                Clipboard.setData(
+                                    ClipboardData(text: user!.uid));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('User ID copied to clipboard!')),
+                                );
+                              }
+                            },
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      // Styled User ID
+                      Text(
+                        user?.uid ?? 'Fetching...',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
   @override
   void dispose() {
     _marketScrollTimer?.cancel();

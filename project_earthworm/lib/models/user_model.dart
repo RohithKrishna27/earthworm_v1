@@ -7,6 +7,7 @@ class UserModel {
   final String phone;
   final String userType; // 'farmer' or 'buyer'
   final DateTime createdAt;
+  final String? customUserID; // New field for custom user ID
 
   UserModel({
     required this.uid,
@@ -15,6 +16,7 @@ class UserModel {
     required this.phone,
     required this.userType,
     required this.createdAt,
+    this.customUserID,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
@@ -25,6 +27,7 @@ class UserModel {
       phone: map['phone'] ?? '',
       userType: map['userType'] ?? '',
       createdAt: (map['createdAt'] as Timestamp).toDate(),
+      customUserID: map['customUserID'], // Added custom user ID
     );
   }
 
@@ -35,6 +38,7 @@ class UserModel {
       'phone': phone,
       'userType': userType,
       'createdAt': FieldValue.serverTimestamp(),
+      if (customUserID != null) 'customUserID': customUserID,
     };
   }
 }

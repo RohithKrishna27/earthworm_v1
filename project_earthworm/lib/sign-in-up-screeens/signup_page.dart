@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'custumID.dart';
 
 class SignUpPage extends StatefulWidget {
   @override
@@ -436,14 +437,15 @@ class _SignUpPageState extends State<SignUpPage>
         'email': _emailController.text,
         'phone': _phoneController.text,
         'userType': _userType,
+        'registrationStatus': 'incomplete', // New status to track
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      if (_userType == 'farmer') {
-        Navigator.pushReplacementNamed(context, '/farmer/home');
-      } else if (_userType == 'buyer') {
-        Navigator.pushReplacementNamed(context, '/buyer/home');
-      }
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => CustomUserIDPage(
+                  uid: userCredential.user!.uid, userType: _userType)));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
