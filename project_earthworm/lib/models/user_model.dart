@@ -16,7 +16,7 @@ class UserModel {
     required this.phone,
     required this.userType,
     required this.createdAt,
-    this.customUserID,
+    required this.customUserID,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
