@@ -38,6 +38,28 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class LocationUtils {
+  static Future<String?> fetchCityName(Position? position) async {
+    if (position == null) return null;
+
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        return placemarks.first.locality ?? 'Unknown City';
+      } else {
+        return 'Unknown City';
+      }
+    } catch (e) {
+      print('Error fetching city name: $e');
+      return 'Error fetching city';
+    }
+  }
+}
+
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -183,6 +205,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  Future<void> _fetchCityName() async {
+    String? _cityName; // To store the city name
+
+    if (_currentPosition == null) return;
+
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        setState(() {
+          _cityName = placemarks.first.locality ?? 'Unknown City';
+        });
+      } else {
+        setState(() {
+          _cityName = 'Unknown City';
+        });
+      }
+    } catch (e) {
+      print('Error fetching city name: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching city: $e')),
+      );
+      setState(() {
+        _cityName = 'Error fetching city';
+      });
+    }
+  }
+
   Future<void> _registerOrSignInUser() async {
     try {
       // Perform anonymous sign-in
@@ -200,26 +253,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Future<void> _getCurrentLocation() async {
     try {
+      // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        throw Exception('Location services are disabled');
+        throw Exception(
+            'Location services are disabled. Please enable them in settings.');
       }
 
+      // Check and request location permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          throw Exception('Location permissions are denied');
+          throw Exception(
+              'Location permissions are denied. Grant permissions to continue.');
         }
       }
 
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception(
+            'Location permissions are permanently denied. Enable them in settings.');
+      }
+
+      // Fetch the current location
       setState(() => _isLoading = true);
-      _currentPosition = await Geolocator.getCurrentPosition();
-      setState(() => _isLoading = false);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error getting location: $e')),
+      _currentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy:
+            LocationAccuracy.high, // High accuracy for farming-related data
+        timeLimit: const Duration(seconds: 15), // Avoid indefinite wait
       );
+
+      // Fetch city name after successfully getting the location
+      await _fetchCityName();
+    } catch (e) {
+      // Log and display user-friendly error messages
+      print('Error getting location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error getting location: ${e.toString()}'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      // Stop the loading indicator
+      setState(() => _isLoading = false);
     }
   }
 
@@ -241,14 +318,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           .doc(currentUser.uid)
           .set({
         'name': _nameController.text,
-        'landSize': double.parse(_landSizeController.text),
+        'landSize': double.parse(
+            _landSizeController.text), // Ensure this is saved correctly
         'farmingMethod': _selectedFarmingMethod,
         'location':
             GeoPoint(_currentPosition!.latitude, _currentPosition!.longitude),
         'createdAt': FieldValue.serverTimestamp(),
         'onboardingComplete': true, // Add this flag
-      });
-
+      }, SetOptions(merge: true)); // Merge to avoid overwriting existing data
       // Navigate to dashboard
       if (mounted) {
         Navigator.pushReplacement(
@@ -399,7 +476,6 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      // Fetch farmer details from Firestore
       final docSnapshot = await FirebaseFirestore.instance
           .collection('farmers')
           .doc(user.uid)
@@ -408,11 +484,12 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
       if (docSnapshot.exists) {
         setState(() {
           _farmerName = docSnapshot.get('name');
-          _landsize =
-              docSnapshot.get('landsize')?.toString(); // Fetch land size
+          _landsize = docSnapshot.data()?['landSize']?.toString() ??
+              'Not Set'; // Check if field exists
         });
       }
     } catch (e) {
+      print('Error fetching farmer details: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error fetching farmer details: $e')),
       );
@@ -727,7 +804,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
     if (_currentPosition == null) return;
 
     try {
-      final String apiKey = '5f2a93688542443d98d140812242411';
+      final String apiKey = '56fbaa310e714f27ac6183232240512';
       final url = Uri.parse('http://api.weatherapi.com/v1/forecast.json'
           '?key=$apiKey'
           '&q=${_currentPosition!.latitude},${_currentPosition!.longitude}'
@@ -1552,7 +1629,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Land Size: ${_landsize ?? 'Unknown'} acres',
+                    'Land Size: ${_landsize ?? 'Not Set'} acres',
                     style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                           fontWeight: FontWeight.w500,
                           color: Colors.grey[700],
@@ -1561,7 +1638,6 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
 
             // Earthworm User ID section
