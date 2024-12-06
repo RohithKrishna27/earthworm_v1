@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+<<<<<<< Updated upstream
+=======
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
+>>>>>>> Stashed changes
 import 'package:project_earthworm/farmer/calculator/calculator_home.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
 import 'package:project_earthworm/farmer/farmer_profile.dart';
+
+enum Language { English, Kannada, Hindi }
 
 class FarmerHome extends StatefulWidget {
   @override
@@ -10,13 +17,56 @@ class FarmerHome extends StatefulWidget {
 
 class _FarmerHomeState extends State<FarmerHome> {
   int _selectedIndex = 0;
+  Language _selectedLanguage = Language.English;
 
+<<<<<<< Updated upstream
   final List<Widget> _pages = [
     HomeScreen(),
     CalculatorHomeScreen(),
     OnboardingScreen(),
     FormerProfile(),
   ];
+=======
+  // Define translations for the texts
+  final Map<Language, Map<String, String>> _localizedStrings = {
+    Language.English: {
+      'welcome_back': 'Welcome Back!',
+      'farming_journey': 'Your farming journey continues here!',
+      'farmer_dashboard': 'Farmer Dashboard',
+      'sell_your_crops': 'Sell Your Crops',
+      'crop_assistance': 'Crop Assistance',
+      'track_activities': 'Track and manage your farm activities',
+      'manage_sales': 'List and manage your crop sales',
+      'get_advice': 'Get expert advice and crop management tips',
+      'languageLabel': 'Select Language',
+      'logout': 'Logout',
+    },
+    Language.Kannada: {
+      'welcome_back': 'ಮರುಬಳಕೆದಾರರಾಗಿ ಸ್ವಾಗತ!',
+      'farming_journey': 'ನಿಮ್ಮ ಕೃಷಿ ಪಯಣವು ಇಲ್ಲಿ ಮುಂದುವರಿಯುತ್ತದೆ!',
+      'farmer_dashboard': 'ಕೃಷಕಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
+      'sell_your_crops': 'ನಿಮ್ಮ ಬೆಳೆಗಳನ್ನು ಮಾರಾಟ ಮಾಡಿ',
+      'crop_assistance': 'ಬೆಳೆ ಸಹಾಯ',
+      'track_activities': 'ನಿಮ್ಮ ಕೃಷಿ ಚಟುವಟಿಕೆಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮತ್ತು ನಿರ್ವಹಿಸಿ',
+      'manage_sales': 'ನಿಮ್ಮ ಬೆಳೆ ಮಾರಾಟಗಳನ್ನು ಪಟ್ಟಿಮಾಡಿ ಮತ್ತು ನಿರ್ವಹಿಸಿ',
+      'get_advice': 'ತಜ್ಞರ ಸಲಹೆ ಮತ್ತು ಬೆಳೆ ನಿರ್ವಹಣೆಯ ಟಿಪ್ಪಣಿಗಳನ್ನು ಪಡೆಯಿರಿ',
+      'languageLabel': 'ಭಾಷೆಯನ್ನು ಆಯ್ಕೆ ಮಾಡಿ',
+      'logout': 'ಬೇರು',
+    },
+    Language.Hindi: {
+      'welcome_back': 'फिर से स्वागत है!',
+      'farming_journey': 'आपकी खेती की यात्रा यहां जारी है!',
+      'farmer_dashboard': 'किसान डैशबोर्ड',
+      'sell_your_crops': 'अपनी फसलें बेचे',
+      'crop_assistance': 'फसल सहायता',
+      'track_activities': 'अपने खेत की गतिविधियों को ट्रैक और प्रबंधित करें',
+      'manage_sales': 'अपनी फसल बिक्री की सूची बनाएं और प्रबंधित करें',
+      'get_advice': 'विशेषज्ञ सलाह और फसल प्रबंधन टिप्स प्राप्त करें',
+      'languageLabel': 'भाषा चुनें',
+      'logout': 'लॉग आउट',
+    },
+  };
+>>>>>>> Stashed changes
 
   void _onItemTapped(int index) {
     setState(() {
@@ -24,9 +74,60 @@ class _FarmerHomeState extends State<FarmerHome> {
     });
   }
 
+  Future<void> _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      // Navigate to the login screen or home screen after logout
+      // You can replace the following line with your desired navigation
+      Navigator.of(context).pushReplacementNamed('/login');
+    } catch (e) {
+      // Handle errors as needed
+      print('Logout failed: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      HomeScreen(localizedStrings: _localizedStrings[_selectedLanguage]!),
+      CalculatorHomeScreen(),
+      OnboardingScreen(),
+    ];
+
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Farmer Home'),
+        actions: [
+          DropdownButton<Language>(
+            value: _selectedLanguage,
+            items: Language.values.map((Language language) {
+              return DropdownMenuItem<Language>(
+                value: language,
+                child: Text(language == Language.English
+                    ? 'English'
+                    : language == Language.Kannada
+                        ? 'ಕನ್ನಡ'
+                        : 'हिन्दी'),
+              );
+            }).toList(),
+            onChanged: (Language? newValue) {
+              setState(() {
+                _selectedLanguage = newValue!;
+              });
+            },
+            hint: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(_localizedStrings[_selectedLanguage]!['languageLabel']!),
+            ),
+          ),
+          SizedBox(width: 16), // Add some spacing
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout,
+            tooltip: _localizedStrings[_selectedLanguage]!['logout']!,
+          ),
+        ],
+      ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -39,11 +140,11 @@ class _FarmerHomeState extends State<FarmerHome> {
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: _localizedStrings[_selectedLanguage]!['farmer_dashboard']!,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.track_changes),
-            label: 'Track',
+            label: 'Farming Calculators',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
@@ -60,14 +161,15 @@ class _FarmerHomeState extends State<FarmerHome> {
 }
 
 class HomeScreen extends StatelessWidget {
-  // Define vibrant colors
-  final Color primaryGreen = Color(0xFF66BB6A); // Vibrant green
-  final Color secondaryGreen = Color(0xFF1B5E20); // Dark green
-  final Color accentYellow = Color(0xFFFFEB3B); // Vibrant yellow
-  final Color backgroundColor = Color(0xFFF1F8E9); // Light green background
+  final Map<String, String> localizedStrings;
+
+  const HomeScreen({required this.localizedStrings});
 
   @override
   Widget build(BuildContext context) {
+    final Color primaryGreen = Color(0xFF66BB6A); // Vibrant green
+    final Color secondaryGreen = Color(0xFF1B5E20); // Dark green
+    final Color backgroundColor = Color(0xFFF1F8E9); // Light green background
     final screenWidth = MediaQuery.of(context).size.width;
     final boxWidth = screenWidth * 0.9; // 90% of screen width
 
@@ -99,7 +201,7 @@ class HomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome Back!',
+                      localizedStrings['welcome_back']!,
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -108,7 +210,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Your farming journey continues here!',
+                      localizedStrings['farming_journey']!,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 16,
@@ -122,8 +224,8 @@ class HomeScreen extends StatelessWidget {
               // Feature Boxes with enhanced styling
               _buildLargeFeatureBox(
                 context,
-                'Farmer Dashboard',
-                'Track and manage your farm activities',
+                localizedStrings['farmer_dashboard']!,
+                localizedStrings['track_activities']!,
                 Icons.dashboard,
                 '/dashboard',
                 Color(0xFF66BB6A), // Vibrant green
@@ -132,8 +234,8 @@ class HomeScreen extends StatelessWidget {
 
               _buildLargeFeatureBox(
                 context,
-                'Sell Your Crops',
-                'List and manage your crop sales',
+                localizedStrings['sell_your_crops']!,
+                localizedStrings['manage_sales']!,
                 Icons.store,
                 '/sell-crops',
                 Color(0xFF43A047), // Slightly darker green
@@ -142,8 +244,8 @@ class HomeScreen extends StatelessWidget {
 
               _buildLargeFeatureBox(
                 context,
-                'Crop Assistance',
-                'Get expert advice and crop management tips',
+                localizedStrings['crop_assistance']!,
+                localizedStrings['get_advice']!,
                 Icons.eco,
                 '/crop-assistance',
                 Color(0xFF2E7D32), // Darkest green
@@ -280,6 +382,7 @@ class SellCropsScreen extends StatelessWidget {
       body: Center(child: Text('Sell Crops Content')),
     );
   }
+<<<<<<< Updated upstream
 }
 
 class CropAssistanceScreen extends StatelessWidget {
@@ -294,3 +397,6 @@ class CropAssistanceScreen extends StatelessWidget {
     );
   }
 }
+=======
+}
+>>>>>>> Stashed changes
