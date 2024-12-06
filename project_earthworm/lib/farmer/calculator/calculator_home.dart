@@ -83,7 +83,7 @@ class CalculatorHomeScreen extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text('Smart Farming Calculators'),
-        backgroundColor: Color(0xFF1B5E20).withOpacity(0.8),
+        backgroundColor: Color.fromARGB(255, 46, 152, 53),
       ),
       body: Container(
         decoration: BoxDecoration(

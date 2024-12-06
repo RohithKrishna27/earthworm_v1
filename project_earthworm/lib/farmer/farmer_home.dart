@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
 import 'package:project_earthworm/farmer/calculator/calculator_home.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
-import 'package:project_earthworm/farmer/farmer_profile.dart';
 
 enum Language { English, Kannada, Hindi }
 
@@ -67,7 +66,7 @@ class _FarmerHomeState extends State<FarmerHome> {
       await FirebaseAuth.instance.signOut();
       // Navigate to the login screen or home screen after logout
       // You can replace the following line with your desired navigation
-      Navigator.of(context).pushReplacementNamed('/login');
+      Navigator.of(context).pushReplacementNamed('/signin');
     } catch (e) {
       // Handle errors as needed
       print('Logout failed: $e');
@@ -84,18 +83,27 @@ class _FarmerHomeState extends State<FarmerHome> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Farmer Home'),
+        backgroundColor: Color.fromARGB(255, 46, 152, 53),
+        title: Text(
+          'Farmer Home',
+          style: TextStyle(color: Colors.white), // Set text color to white
+        ),
         actions: [
           DropdownButton<Language>(
             value: _selectedLanguage,
             items: Language.values.map((Language language) {
               return DropdownMenuItem<Language>(
                 value: language,
-                child: Text(language == Language.English
-                    ? 'English'
-                    : language == Language.Kannada
-                        ? 'ಕನ್ನಡ'
-                        : 'हिन्दी'),
+                child: Text(
+                  language == Language.English
+                      ? 'English'
+                      : language == Language.Kannada
+                          ? 'ಕನ್ನಡ'
+                          : 'हिन्दी',
+                  style: TextStyle(
+                      color: Color.fromARGB(
+                          255, 0, 65, 3)), // Set dropdown text color to white
+                ),
               );
             }).toList(),
             onChanged: (Language? newValue) {
@@ -105,12 +113,16 @@ class _FarmerHomeState extends State<FarmerHome> {
             },
             hint: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(_localizedStrings[_selectedLanguage]!['languageLabel']!),
+              child: Text(
+                _localizedStrings[_selectedLanguage]!['languageLabel']!,
+                style: TextStyle(
+                    color: Colors.white), // Set hint text color to white
+              ),
             ),
           ),
           SizedBox(width: 16), // Add some spacing
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: Colors.white),
             onPressed: _logout,
             tooltip: _localizedStrings[_selectedLanguage]!['logout']!,
           ),
@@ -131,7 +143,7 @@ class _FarmerHomeState extends State<FarmerHome> {
             label: _localizedStrings[_selectedLanguage]!['farmer_dashboard']!,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.track_changes),
+            icon: Icon(Icons.calculate_outlined),
             label: 'Farming Calculators',
           ),
           BottomNavigationBarItem(

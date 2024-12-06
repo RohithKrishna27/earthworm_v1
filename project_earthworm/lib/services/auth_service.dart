@@ -20,7 +20,6 @@ class AuthService with ChangeNotifier {
     required String name,
     required String phone,
     required String userType,
-    required String customUserID,
   }) async {
     try {
       // Create auth user
@@ -36,7 +35,6 @@ class AuthService with ChangeNotifier {
         email: email,
         phone: phone,
         userType: userType,
-        customUserID: customUserID,
         createdAt: DateTime.now(),
       );
 

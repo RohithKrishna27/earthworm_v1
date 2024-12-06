@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:project_earthworm/services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -19,7 +20,7 @@ class _LoginPageState extends State<LoginPage>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Theme colors
+// Theme colors
   final Color _primaryGreen = Color.fromARGB(255, 17, 219, 24);
   final Color _darkGreen = Color.fromARGB(255, 42, 139, 181);
   final Color _brown = Color.fromARGB(255, 42, 139, 181);
@@ -117,7 +118,7 @@ class _LoginPageState extends State<LoginPage>
               ],
             ),
             child: Center(
-              // Using a fallback icon in case the image fails to load
+// Using a fallback icon in case the image fails to load
               child: Image.asset(
                 'assets/earthworm_logo.png',
                 height: 150,
@@ -162,7 +163,7 @@ class _LoginPageState extends State<LoginPage>
           SizedBox(height: 20),
           TextButton(
             onPressed: () {
-              // Add forgot password functionality
+// Add forgot password functionality
             },
             child: Text('Forgot Password?'),
             style: TextButton.styleFrom(
@@ -226,7 +227,7 @@ class _LoginPageState extends State<LoginPage>
           Expanded(
             child: TextButton(
               onPressed: () => setState(() => _isEmailLogin = false),
-              child: Text('User Id'),
+              child: Text('Phone'),
               style: TextButton.styleFrom(
                 foregroundColor: !_isEmailLogin ? Colors.white : _darkGreen,
                 backgroundColor:
@@ -259,16 +260,14 @@ class _LoginPageState extends State<LoginPage>
       ),
       child: TextFormField(
         controller: _loginIdentifierController,
-        keyboardType: TextInputType.text, // User ID is text-based input
+        keyboardType:
+            _isEmailLogin ? TextInputType.emailAddress : TextInputType.phone,
         decoration: InputDecoration(
-          labelText: _isEmailLogin ? 'Email' : 'User ID', // Updated label
-          hintText: _isEmailLogin
-              ? 'Enter your email'
-              : 'Enter your custom user ID', // Updated hint
-          prefixIcon: Icon(
-            _isEmailLogin ? Icons.email : Icons.person, // Updated prefix icon
-            color: _primaryGreen,
-          ),
+          labelText: _isEmailLogin ? 'Email' : 'Phone Number',
+          hintText:
+              _isEmailLogin ? 'Enter your email' : 'Enter your phone number',
+          prefixIcon: Icon(_isEmailLogin ? Icons.email : Icons.phone,
+              color: _primaryGreen),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: BorderSide.none,
@@ -286,14 +285,12 @@ class _LoginPageState extends State<LoginPage>
           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
         validator: (value) {
-          if (value?.isEmpty ?? true) {
+          if (value?.isEmpty ?? true)
             return _isEmailLogin
                 ? 'Enter your email'
-                : 'Enter your user ID'; // Updated validation message
-          }
-          if (_isEmailLogin && !value!.contains('@')) {
+                : 'Enter your phone number';
+          if (_isEmailLogin && !value!.contains('@'))
             return 'Enter a valid email';
-          }
           return null;
         },
       ),
@@ -390,18 +387,50 @@ class _LoginPageState extends State<LoginPage>
 
     setState(() => _isLoading = true);
     try {
-      final authService = AuthService();
+      late UserCredential userCredential;
 
-      // Use the new signInWithIdentifier method
-      final user = await authService.signInWithIdentifier(
-        identifier: _loginIdentifierController.text,
-        password: _passwordController.text,
-      );
+      if (_isEmailLogin) {
+// Email login
+        userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _loginIdentifierController.text,
+          password: _passwordController.text,
+        );
+      } else {
+// Phone login - First query Firestore to find user with matching phone
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('phone', isEqualTo: _loginIdentifierController.text)
+            .get();
 
-      // Navigate based on user type
-      if (user.userType == 'farmer') {
+        if (querySnapshot.docs.isEmpty) {
+          throw FirebaseAuthException(
+            code: 'user-not-found',
+            message: 'No user found with this phone number',
+          );
+        }
+
+// Get the email associated with the phone number
+        final userEmail = querySnapshot.docs.first.data()['email'];
+
+// Login with email
+        userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: userEmail,
+          password: _passwordController.text,
+        );
+      }
+
+// Get user type from Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      final userType = userDoc.data()?['userType'];
+
+// Navigate based on user type
+      if (userType == 'farmer') {
         Navigator.pushReplacementNamed(context, '/farmer/home');
-      } else if (user.userType == 'buyer') {
+      } else if (userType == 'buyer') {
         Navigator.pushReplacementNamed(context, '/buyer/home');
       } else {
         throw Exception('Invalid user type');
