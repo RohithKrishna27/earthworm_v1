@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-<<<<<<< Updated upstream
-=======
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
->>>>>>> Stashed changes
 import 'package:project_earthworm/farmer/calculator/calculator_home.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
 import 'package:project_earthworm/farmer/farmer_profile.dart';
@@ -19,14 +16,6 @@ class _FarmerHomeState extends State<FarmerHome> {
   int _selectedIndex = 0;
   Language _selectedLanguage = Language.English;
 
-<<<<<<< Updated upstream
-  final List<Widget> _pages = [
-    HomeScreen(),
-    CalculatorHomeScreen(),
-    OnboardingScreen(),
-    FormerProfile(),
-  ];
-=======
   // Define translations for the texts
   final Map<Language, Map<String, String>> _localizedStrings = {
     Language.English: {
@@ -66,7 +55,6 @@ class _FarmerHomeState extends State<FarmerHome> {
       'logout': 'लॉग आउट',
     },
   };
->>>>>>> Stashed changes
 
   void _onItemTapped(int index) {
     setState(() {
@@ -382,21 +370,4 @@ class SellCropsScreen extends StatelessWidget {
       body: Center(child: Text('Sell Crops Content')),
     );
   }
-<<<<<<< Updated upstream
 }
-
-class CropAssistanceScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Crop Assistance'),
-        backgroundColor: Color(0xFF2E7D32),
-      ),
-      body: Center(child: Text('Crop Assistance Content')),
-    );
-  }
-}
-=======
-}
->>>>>>> Stashed changes
