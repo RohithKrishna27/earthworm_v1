@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
 import 'package:project_earthworm/farmer/calculator/calculator_home.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
-import 'package:project_earthworm/farmer/farmer_profile.dart';
 
 enum Language { English, Kannada, Hindi }
 

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:project_earthworm/farmer/AdvanceDisesesDetection.dart';
+import 'package:project_earthworm/farmer/CropAnalysisScreen.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
+import 'package:project_earthworm/farmer/FarmingMap.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
@@ -39,10 +41,10 @@ class MyApp extends StatelessWidget {
           '/farmer/home': (context) => FarmerHome(),
           '/buyer/home': (context) => BuyerHome(),
           '/dashboard' : (context) => OnboardingScreen(),
-          '/disease-detection' :(context) => Advancedisesesdetection(),
-          '/seed-varieties' :(context) => Advancedisesesdetection(),
-          '/map-visualization':(context) => Advancedisesesdetection(),
-          '/crop-scheduling':(context) => Advancedisesesdetection(),
+          '/disease-detection' :(context) => AdvanceDiseasesDetection(),
+          '/seed-varieties' :(context) => CropAnalysisScreen(),
+          '/map-visualization':(context) => Farmingmap(),
+          '/crop-scheduling':(context) => AdvanceDiseasesDetection(),
           '/crop-assistance':(context) => CropAssistanceScreen()
         },
       ),
