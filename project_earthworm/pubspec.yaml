@@ -48,6 +48,7 @@ dependencies:
   shared_preferences: ^2.3.3
   geocoding: ^3.0.0
   image_picker: ^1.1.2
+  flutter_staggered_animations: ^1.1.1
   
 dev_dependencies:
   flutter_test:
