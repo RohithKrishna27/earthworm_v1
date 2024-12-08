@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:project_earthworm/buyer/buyer_main.dart';
 import 'package:project_earthworm/farmer/AdvanceDisesesDetection.dart';
 import 'package:project_earthworm/farmer/CropAnalysisScreen.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
@@ -15,7 +16,7 @@ import 'package:project_earthworm/farmer/farmer_home.dart';
 import 'package:project_earthworm/sign-in-up-screeens/login_page.dart';
 import 'package:project_earthworm/sign-in-up-screeens/signup_page.dart';
 import 'package:project_earthworm/sign-in-up-screeens/splash_screen.dart';
-import 'buyer/buyer_main.dart';
+import 'package:project_earthworm/farmer/knowledge/learn_home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,12 +48,13 @@ class MyApp extends StatelessWidget {
           '/dashboard': (context) => OnboardingScreen(),
           '/disease-detection': (context) => AdvanceDiseasesDetection(),
           '/seed-varieties': (context) => CropAnalysisScreen(),
-          '/map-visualization': (context) => UserNameFetcher(),
+          //'/map-visualization':(context) => UserNameFetcher(),
           '/crop-scheduling': (context) => AdvanceDiseasesDetection(),
           '/crop-assistance': (context) => CropAssistanceScreen(),
           '/sell-crops': (context) => SellingCropHomePage(),
           '/sell-business': (context) =>
-              CropDetailsForm(currentUserId: currentUserId)
+              CropDetailsForm(currentUserId: currentUserId),
+          '/learn-home': (context) => LearnHome(),
         },
       ),
     );
