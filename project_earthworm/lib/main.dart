@@ -4,6 +4,7 @@ import 'package:project_earthworm/farmer/AdvanceDisesesDetection.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
 import 'package:project_earthworm/farmer/FarmingMap.dart';
 import 'package:project_earthworm/farmer/SellingCrops/IntailCropdetails.dart';
+import 'package:project_earthworm/farmer/SellingCrops/orderSummay.dart';
 import 'package:project_earthworm/farmer/SellingCrops/sellingCropHomePage.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
 import 'package:provider/provider.dart';
