@@ -252,12 +252,12 @@ class ImplementationScheduleScreen extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () {
               // Navigate to detailed tasks
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => DetailedTasksScreen(),
-              //   ),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TodoPage(),
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2E7D32),

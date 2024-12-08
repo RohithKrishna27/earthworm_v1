@@ -8,7 +8,8 @@ class TodoPage extends StatelessWidget {
         title: Text('Todo List'),
       ),
       body: Center(
-        child: Text('This is the Todo List page'),
+        child: Text(
+            'This is the farmer task list page i am working on this right now'),
       ),
     );
   }
