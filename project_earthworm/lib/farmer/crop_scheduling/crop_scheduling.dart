@@ -55,20 +55,29 @@ class CropSchedulingScreen extends StatelessWidget {
                         icon: Icons.agriculture,
                         onTap: () {
                           // Navigate to traditional methods
-                          Navigator.pushNamed(context, '/traditional');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CropSelectionScreen(),
+                            ),
+                          );
                         },
                       ),
                       _buildMethodCard(
-                        context: context,
-                        title: 'Advanced Methods',
-                        description:
-                            'Modern farming techniques with technology integration',
-                        icon: Icons.precision_manufacturing,
-                        onTap: () {
-                          // Navigate to advanced methods
-                          Navigator.pushNamed(context, '/traditional');
-                        },
-                      ),
+                          context: context,
+                          title: 'Advanced Methods',
+                          description:
+                              'Modern farming techniques with technology integration',
+                          icon: Icons.precision_manufacturing,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const CropSelectionScreen(),
+                              ),
+                            );
+                          }),
                     ],
                   ),
                 ),
