@@ -8,19 +8,6 @@ class BuyerProfilePage extends StatelessWidget {
     final userId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Profile'),
-        backgroundColor: Colors.green,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacementNamed(context, '/signin');
-            },
-          ),
-        ],
-      ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('buyers')
@@ -28,114 +15,267 @@ class BuyerProfilePage extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+            );
           }
 
           final userData = snapshot.data!.data() as Map<String, dynamic>;
 
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 200,
+                pinned: true,
+                backgroundColor: Colors.green,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.green[700]!,
+                          Colors.green[500]!,
+                        ],
+                      ),
+                    ),
+                    child: Stack(
                       children: [
-                        Text(
-                          'Company Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                        Positioned(
+                          right: -50,
+                          top: -50,
+                          child: CircleAvatar(
+                            radius: 130,
+                            backgroundColor: Colors.white.withOpacity(0.1),
                           ),
                         ),
-                        SizedBox(height: 16),
-                        _buildInfoRow('Company',
-                            userData['company']?.toString() ?? 'Not provided'),
-                        _buildInfoRow(
+                        Positioned(
+                          left: -30,
+                          bottom: -30,
+                          child: CircleAvatar(
+                            radius: 100,
+                            backgroundColor: Colors.white.withOpacity(0.1),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                child: Text(
+                                  userData['company']
+                                          ?.substring(0, 1)
+                                          .toUpperCase() ??
+                                      'B',
+                                  style: TextStyle(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                userData['company'] ?? 'Business Name',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.logout, color: Colors.white),
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      Navigator.pushReplacementNamed(context, '/signin');
+                    },
+                  ),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSection(
+                        'Company Information',
+                        Icons.business,
+                        [
+                          _buildInfoTile(
+                            Icons.confirmation_number,
                             'GST Number',
-                            userData['gstNumber']?.toString() ??
-                                'Not provided'),
-                        _buildInfoRow('Phone',
-                            userData['phone']?.toString() ?? 'Not provided'),
-                        _buildInfoRow('Email',
-                            userData['email']?.toString() ?? 'Not provided'),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Address',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                            userData['gstNumber']?.toString() ?? 'Not provided',
                           ),
+                          _buildInfoTile(
+                            Icons.phone,
+                            'Phone',
+                            userData['phone']?.toString() ?? 'Not provided',
+                          ),
+                          _buildInfoTile(
+                            Icons.email,
+                            'Email',
+                            userData['email']?.toString() ?? 'Not provided',
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 24),
+                      _buildSection(
+                        'Address Details',
+                        Icons.location_on,
+                        [
+                          _buildInfoTile(
+                            Icons.home,
+                            'Address',
+                            userData['address']?.toString() ?? 'Not provided',
+                          ),
+                          _buildInfoTile(
+                            Icons.location_city,
+                            'District',
+                            userData['district']?.toString() ?? 'Not provided',
+                          ),
+                          _buildInfoTile(
+                            Icons.map,
+                            'State',
+                            userData['state']?.toString() ?? 'Not provided',
+                          ),
+                          _buildInfoTile(
+                            Icons.pin_drop,
+                            'PIN Code',
+                            userData['pinCode']?.toString() ?? 'Not provided',
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 32),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/buyer/edit-profile',
+                            arguments: userData,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          minimumSize: Size(double.infinity, 54),
                         ),
-                        SizedBox(height: 16),
-                        _buildInfoRow('Address',
-                            userData['address']?.toString() ?? 'Not provided'),
-                        _buildInfoRow('District',
-                            userData['district']?.toString() ?? 'Not provided'),
-                        _buildInfoRow('State',
-                            userData['state']?.toString() ?? 'Not provided'),
-                        _buildInfoRow('PIN Code',
-                            userData['pinCode']?.toString() ?? 'Not provided'),
-                      ],
-                    ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.edit),
+                            SizedBox(width: 8),
+                            Text(
+                              'Edit Profile',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/buyer/edit-profile',
-                        arguments: userData);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    minimumSize: Size(double.infinity, 50),
-                  ),
-                  child: Text('Edit Profile'),
-                ),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
+  Widget _buildSection(String title, IconData icon, List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: Colors.green),
+              SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[700],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String label, String value) {
+    final isNotProvided = value == 'Not provided';
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+          Icon(
+            icon,
+            size: 20,
+            color: isNotProvided ? Colors.grey : Colors.grey[600],
           ),
+          SizedBox(width: 12),
           Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: value == 'Not provided' ? Colors.grey : null,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: isNotProvided ? Colors.grey : Colors.black87,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
