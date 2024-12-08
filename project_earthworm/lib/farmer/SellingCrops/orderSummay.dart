@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'auction_validation_page.dart';
 
 class OrderSummaryPage extends StatelessWidget {
   final Map<String, dynamic> formData;
@@ -19,6 +20,25 @@ class OrderSummaryPage extends StatelessWidget {
 
   Future<void> _placeOrder(BuildContext context) async {
     try {
+      final quantity = formData['cropDetails']['weight'] as double;
+
+      // Add this check at the beginning of the method
+      if (!isDirectSale && quantity >= 50) {
+        // Navigate to auction setup instead of direct placement
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AuctionValidationPage(
+              formData: formData,
+              qualityScores: qualityScores,
+              imageUrls: imageUrls,
+              isDirectSale: isDirectSale,
+            ),
+          ),
+        );
+        return;
+      }
+
       // Add order to Firestore
       await FirebaseFirestore.instance.collection('orders').add({
         'userId': formData['farmerDetails']['farmerId'],
@@ -27,7 +47,8 @@ class OrderSummaryPage extends StatelessWidget {
         'cropType': formData['cropDetails']['cropType'],
         'quantity': formData['cropDetails']['weight'],
         'pricePerQuintal': formData['cropDetails']['expectedPrice'],
-        'totalPrice': formData['cropDetails']['expectedPrice'] * formData['cropDetails']['weight'],
+        'totalPrice': formData['cropDetails']['expectedPrice'] *
+            formData['cropDetails']['weight'],
         'location': formData['location'],
         'qualityScore': qualityScores['Overall_Quality'],
         'analysisDetails': formData['analysisResults'],
@@ -61,8 +82,10 @@ class OrderSummaryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 2);
-    final totalPrice = formData['cropDetails']['expectedPrice'] * formData['cropDetails']['weight'];
+    final currencyFormat =
+        NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 2);
+    final totalPrice = formData['cropDetails']['expectedPrice'] *
+        formData['cropDetails']['weight'];
 
     return Scaffold(
       appBar: AppBar(
@@ -116,19 +139,23 @@ class OrderSummaryPage extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _buildDetailRow('Crop Type', formData['cropDetails']['cropType']),
-                          _buildDetailRow('Quantity', '${formData['cropDetails']['weight']} quintals'),
-                          _buildDetailRow('Price per Quintal', 
-                            currencyFormat.format(formData['cropDetails']['expectedPrice'])),
+                          _buildDetailRow(
+                              'Crop Type', formData['cropDetails']['cropType']),
+                          _buildDetailRow('Quantity',
+                              '${formData['cropDetails']['weight']} quintals'),
+                          _buildDetailRow(
+                              'Price per Quintal',
+                              currencyFormat.format(
+                                  formData['cropDetails']['expectedPrice'])),
                           const Divider(),
-                          _buildDetailRow('Quality Score', 
-                            '${qualityScores['Overall_Quality']!.toStringAsFixed(1)}/10',
-                            valueColor: _getScoreColor(qualityScores['Overall_Quality']!)),
+                          _buildDetailRow('Quality Score',
+                              '${qualityScores['Overall_Quality']!.toStringAsFixed(1)}/10',
+                              valueColor: _getScoreColor(
+                                  qualityScores['Overall_Quality']!)),
                         ],
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
                   _buildSectionTitle('Farmer Details'),
                   Card(
@@ -136,14 +163,15 @@ class OrderSummaryPage extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _buildDetailRow('Name', formData['farmerDetails']['name']),
-                          _buildDetailRow('Phone', formData['farmerDetails']['phone']),
+                          _buildDetailRow(
+                              'Name', formData['farmerDetails']['name']),
+                          _buildDetailRow(
+                              'Phone', formData['farmerDetails']['phone']),
                           _buildDetailRow('Address', formData['address']),
                         ],
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
                   _buildSectionTitle('Location Details'),
                   Card(
@@ -151,14 +179,16 @@ class OrderSummaryPage extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _buildDetailRow('State', formData['location']['state']),
-                          _buildDetailRow('District', formData['location']['district']),
-                          _buildDetailRow('APMC Market', formData['location']['apmcMarket']),
+                          _buildDetailRow(
+                              'State', formData['location']['state']),
+                          _buildDetailRow(
+                              'District', formData['location']['district']),
+                          _buildDetailRow('APMC Market',
+                              formData['location']['apmcMarket']),
                         ],
                       ),
                     ),
                   ),
-
                   if (formData['groupFarming']['isGroupFarming']) ...[
                     const SizedBox(height: 16),
                     _buildSectionTitle('Group Farming Details'),
@@ -167,15 +197,16 @@ class OrderSummaryPage extends StatelessWidget {
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            _buildDetailRow('Number of Members', 
-                              formData['groupFarming']['members'].length.toString()),
+                            _buildDetailRow(
+                                'Number of Members',
+                                formData['groupFarming']['members']
+                                    .length
+                                    .toString()),
                             const Divider(),
                             ...List.generate(
                               formData['groupFarming']['members'].length,
-                              (index) => _buildDetailRow(
-                                'Member ${index + 1}',
-                                '${formData['groupFarming']['members'][index]['name']} - ${formData['groupFarming']['members'][index]['phone']}'
-                              ),
+                              (index) => _buildDetailRow('Member ${index + 1}',
+                                  '${formData['groupFarming']['members'][index]['name']} - ${formData['groupFarming']['members'][index]['phone']}'),
                             ),
                           ],
                         ),

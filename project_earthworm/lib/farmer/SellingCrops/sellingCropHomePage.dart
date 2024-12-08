@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_earthworm/farmer/SellingCrops/IntailCropdetails.dart';
+import 'former_auction_status.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Color scheme constants for better organization
 class AppColors {
@@ -24,7 +26,8 @@ class _SellingCropHomePageState extends State<SellingCropHomePage> {
 
   final Map<Language, Map<String, String>> _localizedStrings = {
     Language.English: {
-      'welcome_message': 'Now just a few clicks from selling your precious crop at the right price!',
+      'welcome_message':
+          'Now just a few clicks from selling your precious crop at the right price!',
       'order_status': 'Order Status',
       'bidding_results': 'Bidding Results',
       'order_history': 'Order History',
@@ -34,11 +37,13 @@ class _SellingCropHomePageState extends State<SellingCropHomePage> {
       'sell_your_crops': 'Sell Your Crops',
       'crop_assistance': 'Crop Assistance',
       'sell_your_crop_directly': 'Sell Your Crop Directly to Business',
-      'join_marketplace': 'Join the marketplace for wholesale buying and selling.',
+      'join_marketplace':
+          'Join the marketplace for wholesale buying and selling.',
       'build_your_brand': 'Build your brand and sell directly to consumers.',
     },
     Language.Kannada: {
-      'welcome_message': 'ಈಗ ನಿಮಗೆ ಸರಿಯಾದ ಬೆಲೆಗೆ ನಿಮ್ಮ ಅಮೂಲ್ಯ ಬೆಳೆಗಳನ್ನು ಮಾರಾಟ ಮಾಡಲು ಕೆಲವು ಕ್ಲಿಕ್ ಮಾತ್ರ ಉಳಿಯುತ್ತವೆ!',
+      'welcome_message':
+          'ಈಗ ನಿಮಗೆ ಸರಿಯಾದ ಬೆಲೆಗೆ ನಿಮ್ಮ ಅಮೂಲ್ಯ ಬೆಳೆಗಳನ್ನು ಮಾರಾಟ ಮಾಡಲು ಕೆಲವು ಕ್ಲಿಕ್ ಮಾತ್ರ ಉಳಿಯುತ್ತವೆ!',
       'order_status': 'ಆರ್ಡರ್ ಸ್ಥಿತಿ',
       'bidding_results': 'ಬಿಡ್ಡಿಂಗ್ ಫಲಿತಾಂಶಗಳು',
       'order_history': 'ಆರ್ಡರ್ ಇತಿಹಾಸ',
@@ -47,12 +52,16 @@ class _SellingCropHomePageState extends State<SellingCropHomePage> {
       'home': 'ಮನೆ',
       'sell_your_crops': 'ನಿಮ್ಮ ಬೆಳೆಗಳನ್ನು ಮಾರಾಟ ಮಾಡಿ',
       'crop_assistance': 'ಬೆಳೆ ಸಹಾಯ',
-      'sell_your_crop_directly': 'ನಿಮ್ಮ ಬೆಳೆಯನ್ನು ನೇರವಾಗಿ ವ್ಯಾಪಾರಕ್ಕೆ ಮಾರಾಟ ಮಾಡಿ',
-      'join_marketplace': 'ಸಗಟು ಖರೀದಿ ಮತ್ತು ಮಾರಾಟಕ್ಕಾಗಿ ಮಾರುಕಟ್ಟೆಗೆ ಸೇರಿಕೊಳ್ಳಿ.',
-      'build_your_brand': 'ನಿಮ್ಮ ಬ್ರಾಂಡ್ ಅನ್ನು ನಿರ್ಮಿಸಿ ನೇರವಾಗಿ ಗ್ರಾಹಕರಿಗೆ ಮಾರಾಟ ಮಾಡಿ.',
+      'sell_your_crop_directly':
+          'ನಿಮ್ಮ ಬೆಳೆಯನ್ನು ನೇರವಾಗಿ ವ್ಯಾಪಾರಕ್ಕೆ ಮಾರಾಟ ಮಾಡಿ',
+      'join_marketplace':
+          'ಸಗಟು ಖರೀದಿ ಮತ್ತು ಮಾರಾಟಕ್ಕಾಗಿ ಮಾರುಕಟ್ಟೆಗೆ ಸೇರಿಕೊಳ್ಳಿ.',
+      'build_your_brand':
+          'ನಿಮ್ಮ ಬ್ರಾಂಡ್ ಅನ್ನು ನಿರ್ಮಿಸಿ ನೇರವಾಗಿ ಗ್ರಾಹಕರಿಗೆ ಮಾರಾಟ ಮಾಡಿ.',
     },
     Language.Hindi: {
-      'welcome_message': 'अब बस कुछ क्लिक दूर हैं अपनी कीमती फसल को सही कीमत पर बेचने के लिए!',
+      'welcome_message':
+          'अब बस कुछ क्लिक दूर हैं अपनी कीमती फसल को सही कीमत पर बेचने के लिए!',
       'order_status': 'ऑर्डर स्थिति',
       'bidding_results': 'बिडिंग परिणाम',
       'order_history': 'ऑर्डर इतिहास',
@@ -86,8 +95,76 @@ class _SellingCropHomePageState extends State<SellingCropHomePage> {
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
       HomeScreen(localizedStrings: _localizedStrings[_selectedLanguage]!),
-      Container(), // Placeholder for additional pages
-      Container(), // Placeholder for additional pages
+      Container(),
+      StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('auctions')
+            .where('farmerDetails.id',
+                isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+            .where('status', whereIn: ['active', 'completed'])
+            .orderBy('startTime', descending: true)
+            .orderBy(FieldPath.documentId, descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Loading auctions... Please wait while we set up the database.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+            );
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inbox, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No active auctions found',
+                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          // Display list of auctions
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            padding: EdgeInsets.all(16),
+            itemBuilder: (context, index) {
+              final auction = snapshot.data!.docs[index];
+              return Card(
+                margin: EdgeInsets.only(bottom: 16),
+                child: ListTile(
+                  title: Text(
+                      '${auction['cropDetails']['type']} - ${auction['cropDetails']['quantity']} quintals'),
+                  subtitle: Text('Status: ${auction['status']}'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FarmerAuctionStatusPage(
+                          auctionId: auction.id,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
+      ),
+      // Placeholder for additional pages
     ];
 
     return Scaffold(
@@ -178,7 +255,6 @@ class HomeScreen extends StatelessWidget {
     final Color backgroundColor = AppColors.lightBlue; // Light Blue
     final screenWidth = MediaQuery.of(context).size.width;
     final boxWidth = screenWidth * 0.9;
-    
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -331,13 +407,17 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-  final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? ''; // Get the current user's UID
+
+final currentUserId =
+    FirebaseAuth.instance.currentUser?.uid ?? ''; // Get the current user's UID
+
 // Route generator for additional screens
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/sell-business':
-        return MaterialPageRoute(builder: (_) => CropDetailsForm(currentUserId: currentUserId));
+        return MaterialPageRoute(
+            builder: (_) => CropDetailsForm(currentUserId: currentUserId));
       case '/agriloop':
         return MaterialPageRoute(builder: (_) => AgriLoopScreen());
       case '/earthworm-rise':
