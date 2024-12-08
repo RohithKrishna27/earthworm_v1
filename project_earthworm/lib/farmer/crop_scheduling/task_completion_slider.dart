@@ -120,7 +120,6 @@ class _TaskCompletionSliderState extends State<TaskCompletionSlider>
               },
               onHorizontalDragUpdate: (details) {
                 if (!_isCompleted) {
-                  final RenderBox box = context.findRenderObject() as RenderBox;
                   final double newProgress =
                       (_progress + details.delta.dx / (maxWidth - sliderHeight))
                           .clamp(0.0, 1.0);

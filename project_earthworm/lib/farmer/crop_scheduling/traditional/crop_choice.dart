@@ -1,4 +1,7 @@
+// crop_selection_screen.dart
 import 'package:flutter/material.dart';
+import 'crop_questionnaire.dart';
+import 'crop_schedule.dart';
 
 class CropSelectionScreen extends StatelessWidget {
   const CropSelectionScreen({Key? key}) : super(key: key);
@@ -20,11 +23,11 @@ class CropSelectionScreen extends StatelessWidget {
         child: SafeArea(
           child: CustomScrollView(
             slivers: [
-              // App Bar
               SliverAppBar(
-                expandedHeight: 150,
+                expandedHeight: 160,
                 floating: false,
                 pinned: true,
+                elevation: 0,
                 backgroundColor: Colors.green[700],
                 flexibleSpace: FlexibleSpaceBar(
                   title: const Text(
@@ -32,6 +35,7 @@ class CropSelectionScreen extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontSize: 24,
                     ),
                   ),
                   background: Container(
@@ -52,7 +56,7 @@ class CropSelectionScreen extends StatelessWidget {
               // Categories
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -63,9 +67,9 @@ class CropSelectionScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       SizedBox(
-                        height: 120,
+                        height: 100,
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: [
@@ -73,8 +77,7 @@ class CropSelectionScreen extends StatelessWidget {
                             _buildCategoryCard('Pulses', Icons.spa),
                             _buildCategoryCard(
                                 'Vegetables', Icons.local_florist),
-                            _buildCategoryCard(
-                                'Fruits', Icons.emoji_food_beverage),
+                            _buildCategoryCard('Oilseeds', Icons.water_drop),
                             _buildCategoryCard(
                                 'Cash Crops', Icons.monetization_on),
                           ],
@@ -91,53 +94,25 @@ class CropSelectionScreen extends StatelessWidget {
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 0.85,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.9,
                   ),
                   delegate: SliverChildListDelegate([
                     _buildCropCard(
-                      context,
-                      'Rice',
-                      'assets/rice.jpg',
-                      'Most widely consumed staple food',
-                      'Cereals',
-                    ),
+                        context, 'Rice', '/images/rice.jpg', 'Cereals'),
                     _buildCropCard(
-                      context,
-                      'Wheat',
-                      'assets/wheat.jpg',
-                      'Essential grain for bread and pasta',
-                      'Cereals',
-                    ),
+                        context, 'Maize', 'images/maize.jpg', 'Cereals'),
                     _buildCropCard(
-                      context,
-                      'Corn',
-                      'assets/corn.jpg',
-                      'Versatile crop with many uses',
-                      'Cereals',
-                    ),
+                        context, 'Mustard', 'images/mustard.png', 'Oilseeds'),
+                    _buildCropCard(context, 'Tomatoes', '/images/tomatoes.jpg',
+                        'Vegetables'),
+                    _buildCropCard(context, 'Ground Nut',
+                        'images/groundnut.jpg', 'Oilseeds'),
                     _buildCropCard(
-                      context,
-                      'Soybeans',
-                      'assets/soybeans.jpg',
-                      'High-protein legume crop',
-                      'Pulses',
-                    ),
+                        context, 'Ragi', '/images/ragi.jpg', 'Cereals'),
                     _buildCropCard(
-                      context,
-                      'Tomatoes',
-                      'assets/tomatoes.jpg',
-                      'Popular vegetable/fruit crop',
-                      'Vegetables',
-                    ),
-                    _buildCropCard(
-                      context,
-                      'Cotton',
-                      'assets/cotton.jpg',
-                      'Important textile crop',
-                      'Cash Crops',
-                    ),
+                        context, 'Cotton', '/images/cotton.jpg', 'Cash Crops'),
                   ]),
                 ),
               ),
@@ -150,27 +125,35 @@ class CropSelectionScreen extends StatelessWidget {
 
   Widget _buildCategoryCard(String title, IconData icon) {
     return Card(
-      elevation: 4,
-      margin: const EdgeInsets.only(right: 16),
+      elevation: 2,
+      margin: const EdgeInsets.only(right: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
         onTap: () {},
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
-          width: 100,
-          padding: const EdgeInsets.all(12),
+          width: 90,
+          padding: const EdgeInsets.all(10),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 32, color: Colors.green[700]),
-              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 24, color: Colors.green[700]),
+              ),
+              const SizedBox(height: 6),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -184,68 +167,72 @@ class CropSelectionScreen extends StatelessWidget {
     BuildContext context,
     String title,
     String imagePath,
-    String description,
     String category,
   ) {
     return Card(
-      elevation: 4,
+      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: InkWell(
         onTap: () {
-          // Navigate to crop details
-          Navigator.pushNamed(context, '/crop-details', arguments: title);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CropQuestionnaireScreen(cropName: title),
+            ),
+          );
         },
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image placeholder (replace with actual images)
             ClipRRect(
               borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(15)),
-              child: Container(
-                height: 120,
+                  const BorderRadius.vertical(top: Radius.circular(12)),
+              child: Image.asset(
+                imagePath,
+                height: 110,
                 width: double.infinity,
-                color: Colors.green[200],
-                child: Icon(
-                  Icons.image,
-                  size: 50,
-                  color: Colors.green[700],
-                ),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 110,
+                    color: Colors.green[50],
+                    child: Icon(Icons.image_not_supported,
+                        color: Colors.green[700]),
+                  );
+                },
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    category,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.green[700],
-                      fontWeight: FontWeight.w500,
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
+                    child: Text(
+                      category,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.green[700],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

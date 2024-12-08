@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
           '/disease-detection': (context) => AdvanceDiseasesDetection(),
           // '/seed-varieties': (context) => CropAnalysisScreen(),
           // '/map-visualization': (context) => UserNameFetcher(),
-          '/crop-scheduling': (context) => AdvanceDiseasesDetection(),
+          '/crop-scheduling': (context) => CropSchedulingScreen(),
           '/crop-assistance': (context) => CropAssistanceScreen(),
           '/sell-crops': (context) => SellingCropHomePage(),
           '/sell-business': (context) =>
