@@ -14,6 +14,7 @@ import 'package:project_earthworm/farmer/farmer_home.dart';
 import 'package:project_earthworm/sign-in-up-screeens/login_page.dart';
 import 'package:project_earthworm/sign-in-up-screeens/signup_page.dart';
 import 'package:project_earthworm/sign-in-up-screeens/splash_screen.dart';
+import 'package:project_earthworm/farmer/knowledge/learn_home.dart';
 import 'farmer/crop_scheduling/crop_scheduling.dart';
 import 'farmer/crop_scheduling/traditional/crop_choice.dart';
 
@@ -46,13 +47,14 @@ class MyApp extends StatelessWidget {
           '/buyer/home': (context) => BuyerHome(),
           '/dashboard': (context) => OnboardingScreen(),
           '/disease-detection': (context) => AdvanceDiseasesDetection(),
-          // '/seed-varieties': (context) => CropAnalysisScreen(),
-          // '/map-visualization': (context) => UserNameFetcher(),
+          // '/seed-varieties' :(context) => CropAnalysisScreen(),
+          //'/map-visualization':(context) => UserNameFetcher(),
           '/crop-scheduling': (context) => CropSchedulingScreen(),
           '/crop-assistance': (context) => CropAssistanceScreen(),
           '/sell-crops': (context) => SellingCropHomePage(),
           '/sell-business': (context) =>
-              CropDetailsForm(currentUserId: currentUserId)
+              CropDetailsForm(currentUserId: currentUserId),
+          '/learn-home': (context) => LearnHome(),
         },
       ),
     );

@@ -7,6 +7,8 @@ import 'package:project_earthworm/farmer/farmerdashboard.dart';
 enum Language { English, Kannada, Hindi }
 
 class FarmerHome extends StatefulWidget {
+  static Language selectedLanguage = Language.English; // Default value
+
   @override
   _FarmerHomeState createState() => _FarmerHomeState();
 }
@@ -28,6 +30,8 @@ class _FarmerHomeState extends State<FarmerHome> {
       'get_advice': 'Get expert advice and crop management tips',
       'languageLabel': 'Select Language',
       'logout': 'Logout',
+      'learn': 'List and manage your crop sales',
+      'gain_knowledge': 'Get expert advice and crop management tips',
     },
     Language.Kannada: {
       'welcome_back': 'ಮರುಬಳಕೆದಾರರಾಗಿ ಸ್ವಾಗತ!',
@@ -40,6 +44,8 @@ class _FarmerHomeState extends State<FarmerHome> {
       'get_advice': 'ತಜ್ಞರ ಸಲಹೆ ಮತ್ತು ಬೆಳೆ ನಿರ್ವಹಣೆಯ ಟಿಪ್ಪಣಿಗಳನ್ನು ಪಡೆಯಿರಿ',
       'languageLabel': 'ಭಾಷೆಯನ್ನು ಆಯ್ಕೆ ಮಾಡಿ',
       'logout': 'ಬೇರು',
+      'learn': 'List and manage your crop sales',
+      'gain_knowledge': 'Get expert advice and crop management tips',
     },
     Language.Hindi: {
       'welcome_back': 'फिर से स्वागत है!',
@@ -52,6 +58,8 @@ class _FarmerHomeState extends State<FarmerHome> {
       'get_advice': 'विशेषज्ञ सलाह और फसल प्रबंधन टिप्स प्राप्त करें',
       'languageLabel': 'भाषा चुनें',
       'logout': 'लॉग आउट',
+      'learn': 'List and manage your crop sales',
+      'gain_knowledge': 'Get expert advice and crop management tips',
     },
   };
 
@@ -237,6 +245,15 @@ class HomeScreen extends StatelessWidget {
                 Icons.eco,
                 '/crop-assistance',
                 Color(0xFF2E7D32), // Darkest green
+                boxWidth,
+              ),
+              _buildLargeFeatureBox(
+                context,
+                localizedStrings['learn']!,
+                localizedStrings['gain_knowledge']!,
+                Icons.eco,
+                '/learn-home',
+                Color.fromARGB(255, 1, 96, 6), // Darkest green
                 boxWidth,
               ),
             ],
