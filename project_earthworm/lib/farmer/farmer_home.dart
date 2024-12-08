@@ -66,7 +66,7 @@ class _FarmerHomeState extends State<FarmerHome> {
       await FirebaseAuth.instance.signOut();
       // Navigate to the login screen or home screen after logout
       // You can replace the following line with your desired navigation
-      Navigator.of(context).pushReplacementNamed('/signin');
+      Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
       // Handle errors as needed
       print('Logout failed: $e');
@@ -83,27 +83,18 @@ class _FarmerHomeState extends State<FarmerHome> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color.fromARGB(255, 46, 152, 53),
-        title: Text(
-          'Farmer Home',
-          style: TextStyle(color: Colors.white), // Set text color to white
-        ),
+        title: Text('Farmer Home'),
         actions: [
           DropdownButton<Language>(
             value: _selectedLanguage,
             items: Language.values.map((Language language) {
               return DropdownMenuItem<Language>(
                 value: language,
-                child: Text(
-                  language == Language.English
-                      ? 'English'
-                      : language == Language.Kannada
-                          ? 'ಕನ್ನಡ'
-                          : 'हिन्दी',
-                  style: TextStyle(
-                      color: Color.fromARGB(
-                          255, 0, 65, 3)), // Set dropdown text color to white
-                ),
+                child: Text(language == Language.English
+                    ? 'English'
+                    : language == Language.Kannada
+                        ? 'ಕನ್ನಡ'
+                        : 'हिन्दी'),
               );
             }).toList(),
             onChanged: (Language? newValue) {
@@ -113,16 +104,13 @@ class _FarmerHomeState extends State<FarmerHome> {
             },
             hint: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                _localizedStrings[_selectedLanguage]!['languageLabel']!,
-                style: TextStyle(
-                    color: Colors.white), // Set hint text color to white
-              ),
+              child:
+                  Text(_localizedStrings[_selectedLanguage]!['languageLabel']!),
             ),
           ),
           SizedBox(width: 16), // Add some spacing
           IconButton(
-            icon: Icon(Icons.logout, color: Colors.white),
+            icon: Icon(Icons.logout),
             onPressed: _logout,
             tooltip: _localizedStrings[_selectedLanguage]!['logout']!,
           ),
@@ -143,7 +131,7 @@ class _FarmerHomeState extends State<FarmerHome> {
             label: _localizedStrings[_selectedLanguage]!['farmer_dashboard']!,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calculate_outlined),
+            icon: Icon(Icons.track_changes),
             label: 'Farming Calculators',
           ),
           BottomNavigationBarItem(

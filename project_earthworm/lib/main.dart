@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:project_earthworm/farmer/AdvanceDisesesDetection.dart';
-import 'package:project_earthworm/farmer/CropAnalysisScreen.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
-import 'package:project_earthworm/farmer/FarmingMap.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
@@ -12,6 +10,8 @@ import 'package:project_earthworm/farmer/farmer_home.dart';
 import 'package:project_earthworm/sign-in-up-screeens/login_page.dart';
 import 'package:project_earthworm/sign-in-up-screeens/signup_page.dart';
 import 'package:project_earthworm/sign-in-up-screeens/splash_screen.dart';
+import 'farmer/crop_scheduling/crop_scheduling.dart';
+import 'farmer/crop_scheduling/traditional/crop_choice.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,12 +40,13 @@ class MyApp extends StatelessWidget {
           '/signup': (context) => SignUpPage(),
           '/farmer/home': (context) => FarmerHome(),
           '/buyer/home': (context) => BuyerHome(),
-          '/dashboard' : (context) => OnboardingScreen(),
-          '/disease-detection' :(context) => AdvanceDiseasesDetection(),
-          '/seed-varieties' :(context) => CropAnalysisScreen(),
-          '/map-visualization':(context) => Farmingmap(),
-          '/crop-scheduling':(context) => AdvanceDiseasesDetection(),
-          '/crop-assistance':(context) => CropAssistanceScreen()
+          '/dashboard': (context) => OnboardingScreen(),
+          '/disease-detection': (context) => AdvanceDiseasesDetection(),
+          '/seed-varieties': (context) => AdvanceDiseasesDetection(),
+          '/map-visualization': (context) => AdvanceDiseasesDetection(),
+          '/crop-scheduling': (context) => CropSchedulingScreen(),
+          '/crop-assistance': (context) => CropAssistanceScreen(),
+          '/traditional': (context) => CropSelectionScreen(),
         },
       ),
     );

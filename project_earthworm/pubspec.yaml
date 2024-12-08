@@ -48,7 +48,8 @@ dependencies:
   shared_preferences: ^2.3.3
   geocoding: ^3.0.0
   image_picker: ^1.1.2
-  
+  vibration: ^1.8.1
+  confetti: ^0.7.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

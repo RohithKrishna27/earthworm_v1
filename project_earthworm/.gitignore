@@ -1,4 +1,5 @@
 # Miscellaneous
+.cmake
 *.class
 *.log
 *.pyc
