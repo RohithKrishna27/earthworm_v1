@@ -24,6 +24,7 @@ class PaymentPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Payment'),
+        backgroundColor: Colors.green,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -56,20 +57,18 @@ class PaymentPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // QR Code (Static for now)
+            // QR Code from Google Drive
             const Text(
               'Scan to Pay',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Center(
-              child: Container(
+              child: Image.network(
+                'https://drive.google.com/uc?id=1BD_m2y6x7tlkFv1r-g5oQ5GtzXQ5Kgt_', // Direct link to your QR code image
                 width: 150,
                 height: 150,
-                color: Colors.grey[300],
-                child: const Center(
-                  child: Text('QR Code'),
-                ),
+                fit: BoxFit.cover,
               ),
             ),
             const SizedBox(height: 20),
@@ -93,6 +92,8 @@ class PaymentPage extends StatelessWidget {
                       decoration: InputDecoration(
                         hintText: 'Enter card number',
                         border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.grey[100],
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -108,6 +109,8 @@ class PaymentPage extends StatelessWidget {
                                 decoration: InputDecoration(
                                   hintText: 'MM/YY',
                                   border: OutlineInputBorder(),
+                                  filled: true,
+                                  fillColor: Colors.grey[100],
                                 ),
                               ),
                             ],
@@ -125,6 +128,8 @@ class PaymentPage extends StatelessWidget {
                                 decoration: InputDecoration(
                                   hintText: '***',
                                   border: OutlineInputBorder(),
+                                  filled: true,
+                                  fillColor: Colors.grey[100],
                                 ),
                               ),
                             ],
@@ -149,6 +154,11 @@ class PaymentPage extends StatelessWidget {
                     ),
                   );
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green, // Button color
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  textStyle: const TextStyle(fontSize: 18),
+                ),
                 child: Text('Pay ₹${_formatter.format(amount)}'),
               ),
             ),
@@ -162,6 +172,7 @@ class PaymentPage extends StatelessWidget {
 void main() {
   runApp(
     MaterialApp(
+      debugShowCheckedModeBanner: false, // Remove debug banner
       home: PaymentPage(
         amount: 250.28,
         isSupport: true,
