@@ -38,17 +38,17 @@ class OrderSummaryPage extends StatelessWidget {
         );
         return;
       }
-
+final mspDetails = formData['cropDetails']['mspCompliance'];
+      final expectedPrice = formData['cropDetails']['expectedPrice'] as double;
       // Add order to Firestore
-      await FirebaseFirestore.instance.collection('orders').add({
+     await FirebaseFirestore.instance.collection('orders').add({
         'userId': formData['farmerDetails']['farmerId'],
         'farmerName': formData['farmerDetails']['name'],
         'farmerPhone': formData['farmerDetails']['phone'],
         'cropType': formData['cropDetails']['cropType'],
         'quantity': formData['cropDetails']['weight'],
-        'pricePerQuintal': formData['cropDetails']['expectedPrice'],
-        'totalPrice': formData['cropDetails']['expectedPrice'] *
-            formData['cropDetails']['weight'],
+        'pricePerQuintal': expectedPrice,
+        'totalPrice': expectedPrice * formData['cropDetails']['weight'],
         'location': formData['location'],
         'qualityScore': qualityScores['Overall_Quality'],
         'analysisDetails': formData['analysisResults'],
@@ -60,8 +60,14 @@ class OrderSummaryPage extends StatelessWidget {
         'isDirectSale': isDirectSale,
         'status': 'pending',
         'orderDate': FieldValue.serverTimestamp(),
+        // Added MSP related fields
+        'mspDetails': {
+          'mspPrice': mspDetails['mspPrice'],
+          'isAboveMSP': mspDetails['isAboveMSP'],
+          'mspDifference': expectedPrice - (mspDetails['mspPrice'] as num),
+          'percentageAboveMSP': ((expectedPrice - (mspDetails['mspPrice'] as num)) / (mspDetails['mspPrice'] as num) * 100).toStringAsFixed(2) + '%'
+        },
       });
-
       // Navigate back to home and show success message
       Navigator.of(context).popUntil((route) => route.isFirst);
       ScaffoldMessenger.of(context).showSnackBar(

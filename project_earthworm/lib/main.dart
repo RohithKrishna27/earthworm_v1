@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:project_earthworm/buyer/BuyingCrop.dart';
 import 'package:project_earthworm/buyer/buyer_main.dart';
 import 'package:project_earthworm/farmer/AdvanceDisesesDetection.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
@@ -56,6 +57,7 @@ class MyApp extends StatelessWidget {
           '/sell-business': (context) =>
               CropDetailsForm(currentUserId: currentUserId),
           '/learn-home': (context) => LearnHome(),
+          '/buyer/browse-crops': (context) => BuyerFeedPage()
         },
       ),
     );
