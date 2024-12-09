@@ -100,19 +100,19 @@ class CropSelectionScreen extends StatelessWidget {
                   ),
                   delegate: SliverChildListDelegate([
                     _buildCropCard(
-                        context, 'Rice', '/images/rice.jpg', 'Cereals'),
+                        context, 'Rice', 'images/rice.png', 'Cereals'),
                     _buildCropCard(
-                        context, 'Maize', 'images/maize.jpg', 'Cereals'),
+                        context, 'Maize', 'images/maize.png', 'Cereals'),
                     _buildCropCard(
                         context, 'Mustard', 'images/mustard.png', 'Oilseeds'),
-                    _buildCropCard(context, 'Tomatoes', '/images/tomatoes.jpg',
-                        'Vegetables'),
+                    _buildCropCard(
+                        context, 'Tomatoes', 'images/tomato.png', 'Vegetables'),
                     _buildCropCard(context, 'Ground Nut',
-                        'images/groundnut.jpg', 'Oilseeds'),
+                        'images/ground_nut.png', 'Oilseeds'),
                     _buildCropCard(
-                        context, 'Ragi', '/images/ragi.jpg', 'Cereals'),
+                        context, 'Ragi', 'images/ragi.png', 'Cereals'),
                     _buildCropCard(
-                        context, 'Cotton', '/images/cotton.jpg', 'Cash Crops'),
+                        context, 'Cotton', 'images/cotton.png', 'Cash Crops'),
                   ]),
                 ),
               ),

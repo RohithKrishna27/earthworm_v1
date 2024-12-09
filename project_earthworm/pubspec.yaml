@@ -52,6 +52,10 @@ dependencies:
   youtube_player_flutter: ^9.1.1
   flutter_inappwebview: ^6.1.5
   google_fonts: ^6.2.1
+  flutter_staggered_grid_view: ^0.7.0
+  shimmer: ^3.0.0
+  cached_network_image: ^3.4.1
+  url_launcher: ^6.3.1
   
   vibration: ^1.8.1
   confetti: ^0.7.0
@@ -80,13 +84,13 @@ flutter:
   assets:
     - assets/earthworm_logo.png
     - images/mustard.png
-    - images/ragi.jpeg
-    - images/tomato.webp
-    - images/rice.jpg
-    - images/ground_nut.jpg
-    - images/cotton.jpg
-    - images/maizeseeds.webp
-  #   - images/a_dot_ham.jpeg
+    - images/ragi.png
+    - images/tomato.png
+    - images/rice.png
+    - images/ground_nut.png
+    - images/cotton.png
+    - images/maize.png
+  #   - images/a_dot_ham.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

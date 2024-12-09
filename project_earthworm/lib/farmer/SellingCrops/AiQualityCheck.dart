@@ -167,9 +167,12 @@ class _AICropAnalysisPageState extends State<AICropAnalysisPage> {
     }
   }
 
-  Future<void> saveToFirebase() async {
+    Future<void> saveToFirebase() async {
     try {
       final averageResults = calculateAverageResults();
+      final mspDetails = widget.formData['cropDetails']['mspCompliance'];
+      final expectedPrice = widget.formData['cropDetails']['expectedPrice'] as double;
+
       final cropSaleRef = await FirebaseFirestore.instance
           .collection('crop_analysis')
           .add({
@@ -178,11 +181,18 @@ class _AICropAnalysisPageState extends State<AICropAnalysisPage> {
             'farmerPhone': widget.formData['farmerDetails']['phone'],
             'cropType': widget.formData['cropDetails']['cropType'],
             'quantity': widget.formData['cropDetails']['weight'],
-            'expectedPrice': widget.formData['cropDetails']['expectedPrice'],
+            'expectedPrice': expectedPrice,
             'location': {
               'state': widget.formData['location']['state'],
               'district': widget.formData['location']['district'],
               'apmcMarket': widget.formData['location']['apmcMarket'],
+            },
+            // Add MSP details
+            'mspDetails': {
+              'mspPrice': mspDetails['mspPrice'],
+              'isAboveMSP': mspDetails['isAboveMSP'],
+              'mspDifference': expectedPrice - (mspDetails['mspPrice'] as num),
+              'percentageAboveMSP': ((expectedPrice - (mspDetails['mspPrice'] as num)) / (mspDetails['mspPrice'] as num) * 100).toStringAsFixed(2) + '%'
             },
             'imageUrls': cloudinaryUrls,
             'analysisResults': analysisResults,
@@ -196,7 +206,7 @@ class _AICropAnalysisPageState extends State<AICropAnalysisPage> {
           });
 
       // Create a new Map to avoid modifying widget.formData directly
-      final updatedFormData = Map<String, dynamic>.from(widget.formData);
+    final updatedFormData = Map<String, dynamic>.from(widget.formData);
       updatedFormData['analysisResults'] = {
         'imageUrls': cloudinaryUrls,
         'results': averageResults,
@@ -224,6 +234,7 @@ class _AICropAnalysisPageState extends State<AICropAnalysisPage> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -383,7 +394,7 @@ class ResultsPage extends StatelessWidget {
     required this.formData,
   }) : super(key: key);
 
-  Future<void> _saveSaleDetails(BuildContext context, bool isDirectSale) async {
+   Future<void> _saveSaleDetails(BuildContext context, bool isDirectSale) async {
     try {
       final cropWeight = formData['cropDetails']['weight'] as double;
       if (cropWeight < 1) {
@@ -396,14 +407,24 @@ class ResultsPage extends StatelessWidget {
         return;
       }
 
+      final expectedPrice = formData['cropDetails']['expectedPrice'] as double;
+      final mspDetails = formData['cropDetails']['mspCompliance'];
+
       final docRef = await FirebaseFirestore.instance.collection('crop_sales').add({
         'userId': formData['farmerDetails']['farmerId'],
         'farmerName': formData['farmerDetails']['name'],
         'farmerPhone': formData['farmerDetails']['phone'],
         'cropType': cropType,
         'quantity': cropWeight,
-        'expectedPrice': formData['cropDetails']['expectedPrice'],
+        'expectedPrice': expectedPrice,
         'location': formData['location'],
+        // Add MSP details
+        'mspDetails': {
+          'mspPrice': mspDetails['mspPrice'],
+          'isAboveMSP': mspDetails['isAboveMSP'],
+          'mspDifference': expectedPrice - (mspDetails['mspPrice'] as num),
+          'percentageAboveMSP': ((expectedPrice - (mspDetails['mspPrice'] as num)) / (mspDetails['mspPrice'] as num) * 100).toStringAsFixed(2) + '%'
+        },
         'isDirectSale': isDirectSale,
         'qualityScore': averages['Overall_Quality'],
         'analysisDetails': formData['analysisResults'],

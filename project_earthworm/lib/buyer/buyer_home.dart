@@ -15,6 +15,113 @@ class _BuyerHomeState extends State<BuyerHome> {
   int _selectedIndex = 0;
   final userId = FirebaseAuth.instance.currentUser!.uid;
 
+  Future<void> _handleLogout(BuildContext context) async {
+    try {
+      // Show confirmation dialog
+      bool shouldLogout = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              'Confirm Logout',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green[700],
+              ),
+            ),
+            content: Text('Are you sure you want to logout?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text('Logout'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (shouldLogout == true) {
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+            );
+          },
+        );
+
+        // Perform logout
+        await FirebaseAuth.instance.signOut();
+
+        // Remove loading indicator
+        Navigator.of(context).pop();
+
+        // Navigate to login screen and clear navigation stack
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/login',
+          (Route<dynamic> route) => false,
+        );
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Successfully logged out'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // Handle any errors
+      Navigator.of(context).pop(); // Remove loading indicator if shown
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Error logging out: ${e.toString()}'),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
   final List<Widget> _pages = [
     BuyerHomePage(),
     BuyerAuctionsPage(),
@@ -25,6 +132,37 @@ class _BuyerHomeState extends State<BuyerHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: _selectedIndex == 3
+          ? AppBar(
+              title: Text('Profile'),
+              backgroundColor: Colors.green,
+              actions: [
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert, color: Colors.white),
+                  onSelected: (value) {
+                    if (value == 'logout') {
+                      _handleLogout(context);
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => [
+                    PopupMenuItem<String>(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, color: Colors.red[400]),
+                          SizedBox(width: 8),
+                          Text(
+                            'Logout',
+                            style: TextStyle(color: Colors.red[400]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          : null,
       body: _pages[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -128,14 +266,17 @@ class BuyerHomePage extends StatelessWidget {
                       .doc(userId)
                       .snapshots(),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
+                    if (!snapshot.hasData || snapshot.data == null) {
                       return const SizedBox();
                     }
 
-                    // Safely handle the data conversion
-                    final data = snapshot.data?.data();
-                    final Map<String, dynamic> buyerData =
-                        data != null ? (data as Map<String, dynamic>) : {};
+                    // Safely cast the data with null check
+                    final data = snapshot.data!.data();
+                    if (data == null) {
+                      return const SizedBox();
+                    }
+
+                    final buyerData = data as Map<String, dynamic>;
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,7 +290,7 @@ class BuyerHomePage extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          buyerData['company'] ?? 'Buyer',
+                          buyerData['company']?.toString() ?? 'Buyer',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 24,

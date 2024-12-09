@@ -1136,40 +1136,49 @@ Widget _buildSummaryItem(IconData icon, String label, String value) {
   );
 }
 
-  Map<String, dynamic> _prepareFormData() {
-    return {
-      'farmerDetails': {
-        'farmerId': widget.currentUserId,
-        'name': _farmerNameController.text,
-        'phone': _phoneController.text,
+Map<String, dynamic> _prepareFormData() {
+  // Get the current expected price
+  double expectedPrice = double.parse(_expectedPriceController.text);
+  // Get MSP price for selected crop
+  double mspPrice = mspPrices[selectedCrop!] ?? 0;
+  // Calculate if price is above MSP
+  bool isAboveMSP = expectedPrice >= mspPrice;
+
+  return {
+    'farmerDetails': {
+      'farmerId': widget.currentUserId,
+      'name': _farmerNameController.text,
+      'phone': _phoneController.text,
+    },
+    'groupFarming': {
+      'isGroupFarming': isGroupFarming,
+      'numberOfMembers': numberOfMembers,
+      'members': memberDetails,
+    },
+    'location': {
+      'state': selectedState,
+      'district': selectedDistrict,
+      'apmcMarket': selectedAPMC,
+    },
+    'cropDetails': {
+      'cropType': selectedCrop,
+      'weight': double.parse(_weightController.text),
+      'marketPrice': {
+        'min': minPrice,
+        'max': maxPrice,
       },
-      'groupFarming': {
-        'isGroupFarming': isGroupFarming,
-        'numberOfMembers': numberOfMembers,
-        'members': memberDetails,
+      'expectedPrice': expectedPrice,
+      'mspCompliance': {
+        'mspPrice': mspPrice,
+        'isAboveMSP': isAboveMSP,
+        'mspDifference': expectedPrice - mspPrice,
       },
-      'location': {
-        'state': selectedState,
-        'district': selectedDistrict,
-        'apmcMarket': selectedAPMC,
-      },
-      'cropDetails': {
-        'cropType': selectedCrop,
-        'weight': double.parse(_weightController.text),
-        'marketPrice': {
-          'min': minPrice,
-          'max': maxPrice,
-        },
-        'expectedPrice': double.parse(_expectedPriceController.text),
-        'mspCompliance': {
-          'mspPrice': mspPrices[selectedCrop!],
-          'isAboveMSP': isAboveMSP,
-        },
-      },
-      'address': _addressController.text,
-      'description': _descriptionController.text,
-    };
-  }
+    },
+    'address': _addressController.text,
+    'description': _descriptionController.text,
+  };
+}
+
 
   @override
   void dispose() {
@@ -1280,31 +1289,65 @@ class ReviewPage extends StatelessWidget {
   }
 
   Widget _buildReviewSection(String title, List<String> details) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+  return Card(
+    elevation: 2,
+    margin: const EdgeInsets.only(bottom: 16),
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
-            const Divider(),
-            ...details.map((detail) => Padding(
+          ),
+          const Divider(),
+          ...details.map((detail) {
+            if (detail.startsWith('MSP Status:')) {
+              final isAboveMSP = detail.contains('Above MSP');
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isAboveMSP ? Colors.green[50] : Colors.orange[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isAboveMSP ? Colors.green[200]! : Colors.orange[200]!,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isAboveMSP ? Icons.check_circle : Icons.warning,
+                        color: isAboveMSP ? Colors.green[700] : Colors.orange[700],
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          detail,
+                          style: TextStyle(
+                            color: isAboveMSP ? Colors.green[700] : Colors.orange[700],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text(detail),
-            )),
-          ],
-        ),
+            );
+          }),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
-
-// Placeholder for AI Analysis Page
+}
