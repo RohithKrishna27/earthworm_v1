@@ -3,13 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AuctionService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Check and end expired auctions
+  // Handle auction expiry check
   static Future<void> checkAndEndExpiredAuction(String auctionId) async {
     final auction =
         await _firestore.collection('auctions').doc(auctionId).get();
-    final auctionData = auction.data()!;
+    if (!auction.exists) return;
 
-    // Check if auction is still active and has expired
+    final auctionData = auction.data()!;
     if (auctionData['status'] == 'active') {
       final endTime = (auctionData['endTime'] as Timestamp).toDate();
       if (DateTime.now().isAfter(endTime)) {
@@ -18,52 +18,141 @@ class AuctionService {
     }
   }
 
-  // End auction and create order for winner
+  // Main auction end handler
   static Future<void> endAuction(String auctionId) async {
     final auctionRef = _firestore.collection('auctions').doc(auctionId);
 
-    // Use transaction to ensure data consistency
     await _firestore.runTransaction((transaction) async {
       final auctionDoc = await transaction.get(auctionRef);
+      if (!auctionDoc.exists) return;
+
       final auctionData = auctionDoc.data()!;
+      if (auctionData['status'] != 'active' ||
+          auctionData['currentBidder'] == null) return;
 
-      // Only proceed if auction is still active
-      if (auctionData['status'] == 'active' &&
-          auctionData['currentBidder'] != null) {
-        // Create order for the winning buyer
-        final orderRef = _firestore.collection('orders').doc();
-        transaction.set(orderRef, {
-          'buyerId': auctionData['currentBidder']['id'],
-          'farmerId': auctionData['farmerDetails']['id'],
-          'cropType': auctionData['cropDetails']['type'],
-          'quantity': auctionData['cropDetails']['quantity'],
-          'price': auctionData['currentBid'],
-          'status': 'pending',
-          'orderType': 'auction',
-          'auctionId': auctionId,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+      // Decide which handler to use based on auction type
+      final bool isGroupAuction = auctionData['isGroupFarming'] ?? false;
 
-        // Update auction status and winner
-        transaction.update(auctionRef, {
-          'status': 'completed',
-          'winningBid': auctionData['currentBid'],
-          'winner': auctionData['currentBidder']['id'], // Store just the ID
-          'winnerDetails': auctionData['currentBidder'], // Store full details
-          'completedAt': FieldValue.serverTimestamp(),
-        });
+      if (isGroupAuction) {
+        await _handleGroupAuctionEnd(transaction, auctionRef, auctionData);
+      } else {
+        await _handleSingleAuctionEnd(transaction, auctionRef, auctionData);
       }
     });
-
-    final updatedAuction = await auctionRef.get();
-    if (updatedAuction.exists) {
-      await _sendAuctionCompletionNotifications(updatedAuction.data()!);
-    }
   }
 
-  static Future<void> _sendAuctionCompletionNotifications(
-      Map<String, dynamic> auctionData) async {
-    // Implement your notification logic here
-    // You might want to send notifications to both the farmer and the winning buyer
+  // Handle single farmer auction completion
+  static Future<void> _handleSingleAuctionEnd(
+    Transaction transaction,
+    DocumentReference auctionRef,
+    Map<String, dynamic> auctionData,
+  ) async {
+    // Create order for single farmer
+    final orderRef = _firestore.collection('orders').doc();
+    transaction.set(orderRef, {
+      'buyerId': auctionData['currentBidder']['id'],
+      'farmerId': auctionData['farmerDetails']['id'],
+      'farmerName': auctionData['farmerDetails']['name'],
+      'cropType': auctionData['cropDetails']['type'],
+      'quantity': auctionData['cropDetails']['quantity'],
+      'price': auctionData['currentBid'],
+      'status': 'pending',
+      'orderType': 'auction',
+      'auctionId': auctionRef.id,
+      'isGroupOrder': false,
+      'location': auctionData['location'],
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    // Create notification for farmer
+    await _createNotification(
+      userId: auctionData['farmerDetails']['id'],
+      title: 'Auction Completed',
+      message:
+          'Your auction for ${auctionData['cropDetails']['type']} has been completed at ₹${auctionData['currentBid']}',
+      auctionId: auctionRef.id,
+      orderId: orderRef.id,
+    );
+
+    // Update auction status
+    _updateAuctionStatus(transaction, auctionRef, auctionData);
+  }
+
+  // Handle group auction completion
+  static Future<void> _handleGroupAuctionEnd(
+    Transaction transaction,
+    DocumentReference auctionRef,
+    Map<String, dynamic> auctionData,
+  ) async {
+    final List<dynamic> groupMembers = auctionData['groupMembers'] ?? [];
+    if (groupMembers.isEmpty) return;
+
+    for (var member in groupMembers) {
+      // Create order for each group member
+      final orderRef = _firestore.collection('orders').doc();
+      transaction.set(orderRef, {
+        'buyerId': auctionData['currentBidder']['id'],
+        'farmerId': member['farmerId'],
+        'farmerName': member['name'],
+        'cropType': auctionData['cropDetails']['type'],
+        'quantity': auctionData['cropDetails']['quantity'],
+        'price': auctionData['currentBid'],
+        'status': 'pending',
+        'orderType': 'auction',
+        'auctionId': auctionRef.id,
+        'isGroupOrder': true,
+        'groupAuctionId': auctionRef.id,
+        'location': auctionData['location'],
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // Create notification for each group member
+      await _createNotification(
+        userId: member['farmerId'],
+        title: 'Group Auction Completed',
+        message:
+            'Your group auction for ${auctionData['cropDetails']['type']} has been completed at ₹${auctionData['currentBid']}',
+        auctionId: auctionRef.id,
+        orderId: orderRef.id,
+      );
+    }
+
+    // Update auction status
+    _updateAuctionStatus(transaction, auctionRef, auctionData);
+  }
+
+  // Helper method to update auction status
+  static void _updateAuctionStatus(
+    Transaction transaction,
+    DocumentReference auctionRef,
+    Map<String, dynamic> auctionData,
+  ) {
+    transaction.update(auctionRef, {
+      'status': 'completed',
+      'winningBid': auctionData['currentBid'],
+      'winner': auctionData['currentBidder']['id'],
+      'winnerDetails': auctionData['currentBidder'],
+      'completedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // Helper method to create notifications
+  static Future<void> _createNotification({
+    required String userId,
+    required String title,
+    required String message,
+    required String auctionId,
+    required String orderId,
+  }) async {
+    await _firestore.collection('notifications').add({
+      'userId': userId,
+      'type': 'auction_completed',
+      'title': title,
+      'message': message,
+      'auctionId': auctionId,
+      'orderId': orderId,
+      'read': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 }
