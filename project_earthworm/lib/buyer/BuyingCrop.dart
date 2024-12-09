@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_earthworm/buyer/paymentGateway.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:intl/intl.dart';
@@ -72,8 +73,10 @@ class CropCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat("#,##,###");
-    final isBelowMSP = data['mspDetails']['mspDifference'] < 0;
-    
+    final isBelowMSP = data['mspDetails'] != null && 
+                       data['mspDetails']['mspDifference'] != null && 
+                       data['mspDetails']['mspDifference'] < 0;
+
     return Card(
       elevation: 4,
       margin: const EdgeInsets.only(bottom: 16),
@@ -109,7 +112,7 @@ class CropCard extends StatelessWidget {
                         const Icon(Icons.analytics, color: Colors.white, size: 16),
                         const SizedBox(width: 4),
                         Text(
-                          'AI Score: ${data['qualityScore'].toStringAsFixed(1)}/10',
+                          'AI Score: ${data['qualityScore']?.toStringAsFixed(1) ?? 'N/A'}/10',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -133,14 +136,14 @@ class CropCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        data['cropType'],
+                        data['cropType'] ?? 'Unknown Crop',
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        '₹${formatter.format(data['expectedPrice'])}/quintal',
+                        '₹${formatter.format(data['expectedPrice'] ?? 0)}/quintal',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -157,7 +160,7 @@ class CropCard extends StatelessWidget {
                       const Icon(Icons.person, size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        data['farmerName'],
+                        data['farmerName'] ?? 'Unknown Farmer',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -168,7 +171,7 @@ class CropCard extends StatelessWidget {
                       const Icon(Icons.location_on, size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        '${data['location']['district']}, ${data['location']['state']}',
+                        '${data['location']?['district'] ?? 'Unknown District'}, ${data['location']?['state'] ?? 'Unknown State'}',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -179,7 +182,7 @@ class CropCard extends StatelessWidget {
                       const Icon(Icons.scale, size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        '${formatter.format(data['quantity'])} quintals available',
+                        '${formatter.format(data['quantity'] ?? 0)} quintals available',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     ],
@@ -222,13 +225,13 @@ class CropCard extends StatelessWidget {
                           icon: Icons.phone,
                           label: 'Call',
                           color: Colors.green,
-                          onTap: () => _launchCall(data['farmerPhone']),
+                          onTap: () => _launchCall(data['farmerPhone'] ?? ''),
                         ),
                         _ActionButton(
                           icon: Icons.message,
                           label: 'Message',
                           color: Colors.blue,
-                          onTap: () => _launchMessage(data['farmerPhone']),
+                          onTap: () => _launchMessage(data['farmerPhone'] ?? ''),
                         ),
                         _ActionButton(
                           icon: Icons.info_outline,
@@ -258,16 +261,20 @@ class CropCard extends StatelessWidget {
   }
 
   Future<void> _launchCall(String phone) async {
-    final uri = Uri(scheme: 'tel', path: phone);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    if (phone.isNotEmpty) {
+      final uri = Uri(scheme: 'tel', path: phone);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      }
     }
   }
 
   Future<void> _launchMessage(String phone) async {
-    final uri = Uri(scheme: 'sms', path: phone);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+    if (phone.isNotEmpty) {
+      final uri = Uri(scheme: 'sms', path: phone);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      }
     }
   }
 }
@@ -315,10 +322,15 @@ class _DetailedCropViewState extends State<DetailedCropView> {
 
   @override
   Widget build(BuildContext context) {
-    final isBelowMSP = widget.data['mspDetails']['mspDifference'] < 0;
-    final mspPrice = widget.data['mspDetails']['mspPrice'];
-    final listedPrice = widget.data['expectedPrice'];
-    final quantity = widget.data['quantity'];
+    final isBelowMSP = widget.data['mspDetails'] != null && 
+                       widget.data['mspDetails']['mspDifference'] != null && 
+                       widget.data['mspDetails']['mspDifference'] < 0;
+    final mspPrice = widget.data['mspDetails'] != null && 
+                     widget.data['mspDetails']['mspPrice'] != null 
+                     ? widget.data['mspDetails']['mspPrice'] 
+                     : null;
+    final listedPrice = widget.data['expectedPrice'] ?? 0;
+    final quantity = widget.data['quantity'] ?? 0;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.9,
@@ -342,7 +354,7 @@ class _DetailedCropViewState extends State<DetailedCropView> {
                   setState(() => _currentImageIndex = index);
                 },
               ),
-              items: List<String>.from(widget.data['imageUrls']).map((url) {
+              items: List<String>.from(widget.data['imageUrls'] ?? []).map((url) {
                 return Builder(
                   builder: (BuildContext context) {
                     return ClipRRect(
@@ -357,7 +369,7 @@ class _DetailedCropViewState extends State<DetailedCropView> {
             // Image indicators
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: widget.data['imageUrls'].asMap().entries.map<Widget>((entry) {
+              children: widget.data['imageUrls']?.asMap().entries.map<Widget>((entry) {
                 return Container(
                   width: 8,
                   height: 8,
@@ -369,18 +381,18 @@ class _DetailedCropViewState extends State<DetailedCropView> {
                         : Colors.grey.shade300,
                   ),
                 );
-              }).toList(),
+              }).toList() ?? [],
             ),
             const SizedBox(height: 24),
 
             // Basic Info
             Text(
-              widget.data['cropType'],
+              widget.data['cropType'] ?? 'Unknown Crop',
               style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'by ${widget.data['farmerName']}',
+              'by ${widget.data['farmerName'] ?? 'Unknown Farmer'}',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
@@ -392,7 +404,7 @@ class _DetailedCropViewState extends State<DetailedCropView> {
             // Location & Quantity
             _buildInfoCard(
               title: 'Pick-up Location',
-              content: '${widget.data['address']}',
+              content: '${widget.data['address'] ?? 'Unknown Location'}',
               icon: Icons.location_on,
             ),
             const SizedBox(height: 16),
@@ -410,23 +422,23 @@ class _DetailedCropViewState extends State<DetailedCropView> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              Text(widget.data['description']),
+              Text(widget.data['description'] ?? 'No description available'),
               const SizedBox(height: 24),
             ],
 
             // Purchase Options
             if (isBelowMSP) ...[
               _buildPurchaseButton(
-                label: 'Support Farmer - Buy at MSP (₹${_formatter.format(mspPrice)})',
-                totalAmount: mspPrice * quantity,
-                color: Colors.green,
+                label: 'Support Farmer - Buy at MSP (₹${_formatter.format(mspPrice ?? 0)})',
+                totalAmount: (mspPrice ?? 0) * quantity,
+                color: const Color.fromARGB(255, 157, 247, 175),
                 isSupport: true,
               ),
               const SizedBox(height: 12),
               _buildPurchaseButton(
                 label: 'Buy at Listed Price (₹${_formatter.format(listedPrice)})',
                 totalAmount: listedPrice * quantity,
-                color: Colors.blue,
+                color: const Color.fromARGB(255, 190, 187, 85),
                 isSupport: false,
               ),
             ] else
@@ -443,8 +455,10 @@ class _DetailedCropViewState extends State<DetailedCropView> {
   }
 
   Widget _buildQualitySection() {
-    final qualityScore = widget.data['qualityScore'];
-    final analysisResults = widget.data['analysisDetails']['results'] as Map<String, dynamic>;
+    final qualityScore = widget.data['qualityScore'] ?? 0;
+    final analysisResults = widget.data['analysisDetails'] != null 
+      ? widget.data['analysisDetails']['results'] as Map<String, dynamic>? 
+      : null;
 
     return Card(
       elevation: 2,
@@ -468,7 +482,7 @@ class _DetailedCropViewState extends State<DetailedCropView> {
                   ),
                   child: Text(
                     '${qualityScore.toStringAsFixed(1)}/10',
-                      style: const TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -485,37 +499,38 @@ class _DetailedCropViewState extends State<DetailedCropView> {
               ],
             ),
             const SizedBox(height: 16),
-            ...analysisResults.entries
-                .where((e) => e.key != 'Overall_Quality')
-                .map((e) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              e.key.replaceAll('_', ' '),
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                            Text(
-                              '${e.value.toStringAsFixed(1)}/10',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        LinearProgressIndicator(
-                          value: e.value / 10,
-                          backgroundColor: Colors.grey[200],
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            _getQualityColor(e.value),
+            if (analysisResults != null)
+              ...analysisResults.entries
+                  .where((e) => e.key != 'Overall_Quality')
+                  .map((e) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                e.key.replaceAll('_', ' '),
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              Text(
+                                '${e.value.toStringAsFixed(1)}/10',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           ),
-                          minHeight: 8,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                    ))
-                .toList(),
+                          const SizedBox(height: 4),
+                          LinearProgressIndicator(
+                            value: e.value / 10,
+                            backgroundColor: Colors.grey[200],
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              _getQualityColor(e.value),
+                            ),
+                            minHeight: 8,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                      ))
+                  .toList(),
           ],
         ),
       ),
@@ -649,12 +664,17 @@ class _DetailedCropViewState extends State<DetailedCropView> {
   }
 
   void _proceedToPayment(double amount, bool isSupport) {
-    // TODO: Implement payment gateway integration
-    // For now, just show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Proceeding to payment: ₹${_formatter.format(amount)}'),
-        backgroundColor: Colors.green,
+    Navigator.pop(context); // Close the dialog
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentPage(
+          amount: amount,
+          isSupport: isSupport,
+          cropName: widget.data['cropType'] ?? 'Unknown Crop', // Crop name
+          farmerName: widget.data['farmerName'] ?? 'Unknown Farmer', // Farmer name
+          farmerPhone: widget.data['farmerPhone'] ?? '', // Farmer phone number
+        ),
       ),
     );
   }
