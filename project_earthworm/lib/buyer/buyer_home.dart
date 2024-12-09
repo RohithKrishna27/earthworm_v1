@@ -128,9 +128,15 @@ class BuyerHomePage extends StatelessWidget {
                       .doc(userId)
                       .snapshots(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) return SizedBox();
-                    final buyerData =
-                        snapshot.data!.data() as Map<String, dynamic>;
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox();
+                    }
+
+                    // Safely handle the data conversion
+                    final data = snapshot.data?.data();
+                    final Map<String, dynamic> buyerData =
+                        data != null ? (data as Map<String, dynamic>) : {};
+
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -303,7 +309,8 @@ class BuyerHomePage extends StatelessWidget {
                   'Won Auctions',
                   FirebaseFirestore.instance
                       .collection('auctions')
-                      .where('winner', isEqualTo: userId)
+                      .where('status', isEqualTo: 'completed')
+                      .where('currentBidder.id', isEqualTo: userId)
                       .snapshots(),
                   Colors.orange,
                 ),
@@ -373,6 +380,12 @@ class BuyerHomePage extends StatelessWidget {
               .limit(5)
               .snapshots(),
           builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
             if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
               return Center(
                 child: Padding(
@@ -385,14 +398,18 @@ class BuyerHomePage extends StatelessWidget {
               );
             }
 
-            return Column(
-              children: snapshot.data!.docs.map((doc) {
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                final doc = snapshot.data!.docs[index];
                 final data = doc.data() as Map<String, dynamic>;
                 return AuctionCard(
                   auctionId: doc.id,
                   data: data,
                 );
-              }).toList(),
+              },
             );
           },
         ),

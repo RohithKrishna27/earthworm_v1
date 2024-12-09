@@ -127,11 +127,23 @@ class AuctionService {
     DocumentReference auctionRef,
     Map<String, dynamic> auctionData,
   ) {
+    final currentBidder = auctionData['currentBidder'];
+
+    if (currentBidder == null) return;
+
+    // Create a properly structured winnerDetails object
+    final winnerDetails = {
+      'id': currentBidder['id'],
+      'name': currentBidder['name'] ?? '',
+      'phone': currentBidder['phone'] ?? '',
+    };
+
     transaction.update(auctionRef, {
       'status': 'completed',
       'winningBid': auctionData['currentBid'],
-      'winner': auctionData['currentBidder']['id'],
-      'winnerDetails': auctionData['currentBidder'],
+      'winner': currentBidder['id'],
+      'winnerDetails': winnerDetails,
+      'currentBidder': currentBidder,
       'completedAt': FieldValue.serverTimestamp(),
     });
   }

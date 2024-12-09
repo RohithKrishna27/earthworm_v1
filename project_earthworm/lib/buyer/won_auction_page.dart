@@ -22,11 +22,12 @@ class WonAuctionsPage extends StatelessWidget {
         stream: FirebaseFirestore.instance
             .collection('auctions')
             .where('status', isEqualTo: 'completed')
-            .where('winner', isEqualTo: userId)
-            .orderBy('endTime', descending: true)
+            .where('currentBidder.id', isEqualTo: userId) // Updated this line
+            .orderBy('endTime', descending: true) // Updated to use completedAt
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
+            print('Query error: ${snapshot.error}');
             return _buildErrorState();
           }
 
@@ -49,6 +50,8 @@ class WonAuctionsPage extends StatelessWidget {
             padding: EdgeInsets.all(16),
             itemBuilder: (context, index) {
               final auction = auctions[index].data() as Map<String, dynamic>;
+              print(
+                  'Auction data: ${auction['cropDetails']['type']} - Status: ${auction['status']} - Bidder: ${auction['currentBidder']['id']}');
               return _WonAuctionCard(
                 auctionId: auctions[index].id,
                 auction: auction,
@@ -58,6 +61,30 @@ class WonAuctionsPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  static void _updateAuctionStatus(
+    Transaction transaction,
+    DocumentReference auctionRef,
+    Map<String, dynamic> auctionData,
+  ) {
+    final winnerDetails = auctionData['currentBidder'];
+
+    // Ensure consistent data structure
+    transaction.update(auctionRef, {
+      'status': 'completed',
+      'winningBid': auctionData['currentBid'],
+      'winner': winnerDetails['id'],
+      'winnerDetails': {
+        'id': winnerDetails['id'],
+        'name': winnerDetails['name'] ?? '',
+        'phone': winnerDetails['phone'] ?? '',
+        // Add any other relevant winner details
+      },
+      'completedAt': FieldValue.serverTimestamp(),
+    });
+
+    // Create notification for the winner
   }
 
   Widget _buildErrorState() {
@@ -135,7 +162,7 @@ class _WonAuctionCard extends StatelessWidget {
     final cropDetails = auction['cropDetails'] as Map<String, dynamic>? ?? {};
     final farmerDetails =
         auction['farmerDetails'] as Map<String, dynamic>? ?? {};
-    final winningBid = auction['currentBid'] ?? 0.0;
+    final winningBid = auction['winningBid'] ?? auction['currentBid'] ?? 0.0;
 
     return Card(
       elevation: 4,

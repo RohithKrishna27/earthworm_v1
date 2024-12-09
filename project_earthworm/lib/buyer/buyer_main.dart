@@ -10,15 +10,30 @@ class BuyerMain extends StatelessWidget {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('buyers')
-          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .doc(FirebaseAuth.instance.currentUser?.uid)
           .snapshots(),
       builder: (context, snapshot) {
+        // Show loading while waiting for data
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // Handle authentication errors
+        if (FirebaseAuth.instance.currentUser == null) {
+          return const Scaffold(
+            body: Center(
+              child: Text('Please sign in to continue'),
+            ),
+          );
         }
 
         // If buyer profile doesn't exist or isn't complete, show setup
-        if (!snapshot.hasData || !(snapshot.data?.exists ?? false)) {
+        final data = snapshot.data?.data() as Map<String, dynamic>?;
+        final isProfileComplete = data?['profileCompleted'] ?? false;
+
+        if (!snapshot.hasData || !snapshot.data!.exists || !isProfileComplete) {
           return BuyerProfileSetup();
         }
 

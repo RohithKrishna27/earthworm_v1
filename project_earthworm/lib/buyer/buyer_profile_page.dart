@@ -14,7 +14,7 @@ class BuyerProfilePage extends StatelessWidget {
             .doc(userId)
             .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
@@ -22,7 +22,14 @@ class BuyerProfilePage extends StatelessWidget {
             );
           }
 
-          final userData = snapshot.data!.data() as Map<String, dynamic>;
+          if (!snapshot.hasData) {
+            return Center(child: Text('No data available'));
+          }
+
+          // Safely handle the data conversion
+          final data = snapshot.data?.data();
+          final Map<String, dynamic> userData =
+              data != null ? (data as Map<String, dynamic>) : {};
 
           return CustomScrollView(
             slivers: [

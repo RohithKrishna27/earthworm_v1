@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
           '/signin': (context) => LoginPage(),
           '/signup': (context) => SignUpPage(),
           '/farmer/home': (context) => FarmerHome(),
-          '/buyer/home': (context) => BuyerHome(),
+          '/buyer/home': (context) => BuyerMain(),
           '/dashboard': (context) => OnboardingScreen(),
           '/disease-detection': (context) => AdvanceDiseasesDetection(),
           // '/seed-varieties' :(context) => CropAnalysisScreen(),
