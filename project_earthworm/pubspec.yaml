@@ -84,13 +84,13 @@ flutter:
   assets:
     - assets/earthworm_logo.png
     - images/mustard.png
-    - images/ragi.jpeg
-    - images/tomato.webp
-    - images/rice.jpg
-    - images/ground_nut.jpg
-    - images/cotton.jpg
-    - images/maizeseeds.webp
-  #   - images/a_dot_ham.jpeg
+    - images/ragi.png
+    - images/tomato.png
+    - images/rice.png
+    - images/ground_nut.png
+    - images/cotton.png
+    - images/maize.png
+  #   - images/a_dot_ham.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
