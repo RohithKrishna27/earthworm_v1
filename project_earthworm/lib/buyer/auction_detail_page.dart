@@ -131,68 +131,108 @@ class AuctionDetailPage extends StatelessWidget {
   }
 
   Widget _buildFarmerDetails(Map<String, dynamic> farmerDetails) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    // Get the farmer ID from farmerDetails
+    final farmerId = farmerDetails['id'];
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('farmers')
+          .doc(farmerId)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+          );
+        }
+
+        // Merge the Firestore farmer data with existing farmerDetails
+        final firestoreFarmerData =
+            snapshot.data!.data() as Map<String, dynamic>? ?? {};
+
+        // Convert GeoPoint to string if it exists
+        String locationStr = '';
+        if (firestoreFarmerData['location'] is GeoPoint) {
+          final location = firestoreFarmerData['location'] as GeoPoint;
+          locationStr =
+              '${location.latitude.toStringAsFixed(6)}° N, ${location.longitude.toStringAsFixed(6)}° E';
+        }
+
+        return Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.green[50],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: Colors.green[100],
-                child: farmerDetails['photoUrl'] != null
-                    ? ClipOval(
-                        child: Image.network(
-                          farmerDetails['photoUrl'],
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Icon(Icons.person, size: 30, color: Colors.green),
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.green[100],
+                    child: farmerDetails['photoUrl'] != null
+                        ? ClipOval(
+                            child: Image.network(
+                              farmerDetails['photoUrl'],
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(Icons.person,
+                                      size: 30, color: Colors.green),
+                            ),
+                          )
+                        : Icon(Icons.person, size: 30, color: Colors.green),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          firestoreFarmerData['name'] ??
+                              farmerDetails['name'] ??
+                              'Unknown Farmer',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      )
-                    : Icon(Icons.person, size: 30, color: Colors.green),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      farmerDetails['name'] ?? 'Unknown Farmer',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                        if (farmerDetails['experience'] != null)
+                          Text(
+                            '${farmerDetails['experience']} years of farming experience',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                      ],
                     ),
-                    if (farmerDetails['experience'] != null)
-                      Text(
-                        '${farmerDetails['experience']} years of farming experience',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+              SizedBox(height: 16),
+              _buildFarmerInfoRow(Icons.agriculture, 'Farming Method',
+                  firestoreFarmerData['farmingMethod'] ?? 'Not specified'),
+              _buildFarmerInfoRow(
+                  Icons.landscape,
+                  'Land Size',
+                  firestoreFarmerData['landSize'] != null
+                      ? '${firestoreFarmerData['landSize']} acres'
+                      : 'Not specified'),
+              _buildFarmerInfoRow(Icons.location_on, 'Location',
+                  locationStr.isNotEmpty ? locationStr : 'Not specified'),
+              _buildFarmerInfoRow(Icons.phone, 'Phone', farmerDetails['phone']),
+              _buildFarmerInfoRow(Icons.location_on, 'Address',
+                  '${farmerDetails['address'] ?? ''}, ${farmerDetails['district'] ?? ''}, ${farmerDetails['state'] ?? ''}'),
+              if (farmerDetails['certifications'] != null)
+                _buildFarmerInfoRow(Icons.verified, 'Certifications',
+                    farmerDetails['certifications'].join(', ')),
             ],
           ),
-          SizedBox(height: 16),
-          _buildFarmerInfoRow(Icons.phone, 'Phone', farmerDetails['phone']),
-          _buildFarmerInfoRow(Icons.location_on, 'Address',
-              '${farmerDetails['address'] ?? ''}, ${farmerDetails['district'] ?? ''}, ${farmerDetails['state'] ?? ''}'),
-          _buildFarmerInfoRow(
-              Icons.agriculture, 'Farming Type', farmerDetails['farmingType']),
-          _buildFarmerInfoRow(Icons.landscape, 'Land Size',
-              '${farmerDetails['landSize']} acres'),
-          if (farmerDetails['certifications'] != null)
-            _buildFarmerInfoRow(Icons.verified, 'Certifications',
-                farmerDetails['certifications'].join(', ')),
-        ],
-      ),
+        );
+      },
     );
   }
 

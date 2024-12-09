@@ -16,6 +16,40 @@ class _BuyerProfileSetupState extends State<BuyerProfileSetup> {
   final _pinCodeController = TextEditingController();
   final _gstController = TextEditingController();
   bool _isLoading = false;
+  String? _userEmail;
+  String? _userPhone;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final userData = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userData.exists) {
+          setState(() {
+            _userEmail = userData.data()?['email'];
+            _userPhone = userData.data()?['phone'];
+          });
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching user data: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -70,9 +104,6 @@ class _BuyerProfileSetupState extends State<BuyerProfileSetup> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('No user signed in');
 
-      final phone = user.phoneNumber ?? '';
-      final email = user.email ?? '';
-
       await FirebaseFirestore.instance.collection('buyers').doc(user.uid).set({
         'company': _companyController.text,
         'address': _addressController.text,
@@ -80,8 +111,8 @@ class _BuyerProfileSetupState extends State<BuyerProfileSetup> {
         'district': _districtController.text,
         'pinCode': _pinCodeController.text,
         'gstNumber': _gstController.text,
-        'phone': phone,
-        'email': email,
+        'phone': _userPhone,
+        'email': _userEmail,
         'profileCompleted': true,
         'uid': user.uid,
         'createdAt': FieldValue.serverTimestamp(),
@@ -219,15 +250,13 @@ class _BuyerProfileSetupState extends State<BuyerProfileSetup> {
                           _buildContactInfo(
                             Icons.phone,
                             'Phone',
-                            FirebaseAuth.instance.currentUser?.phoneNumber ??
-                                'Not provided',
+                            _userPhone ?? 'Loading...',
                           ),
                           SizedBox(height: 8),
                           _buildContactInfo(
                             Icons.email,
                             'Email',
-                            FirebaseAuth.instance.currentUser?.email ??
-                                'Not provided',
+                            _userEmail ?? 'Loading...',
                           ),
                         ],
                       ),

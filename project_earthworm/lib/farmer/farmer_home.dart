@@ -74,7 +74,7 @@ class _FarmerHomeState extends State<FarmerHome> {
       await FirebaseAuth.instance.signOut();
       // Navigate to the login screen or home screen after logout
       // You can replace the following line with your desired navigation
-      Navigator.of(context).pushReplacementNamed('/login');
+      Navigator.of(context).pushReplacementNamed('/signin');
     } catch (e) {
       // Handle errors as needed
       print('Logout failed: $e');

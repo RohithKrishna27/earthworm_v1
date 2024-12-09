@@ -108,63 +108,285 @@ class _SellingCropHomePageState extends State<SellingCropHomePage> {
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
-              child: Text(
-                'Loading auctions... Please wait while we set up the database.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red.shade300,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Loading auctions...',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please wait while we set up the database.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.inbox, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
+                  CircularProgressIndicator(
+                    color: Colors.green.shade600,
+                    strokeWidth: 3,
+                  ),
+                  const SizedBox(height: 24),
                   Text(
-                    'No active auctions found',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                    'Loading your auctions...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ],
               ),
             );
           }
 
-          // Display list of auctions
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.inbox_rounded,
+                        size: 72,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'No Active Auctions',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Start a new auction to sell your crops',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        // Navigate to create auction page
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create New Auction'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           return ListView.builder(
             itemCount: snapshot.data!.docs.length,
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             itemBuilder: (context, index) {
-              final auction = snapshot.data!.docs[index];
+              final auction =
+                  snapshot.data!.docs[index].data() as Map<String, dynamic>;
+              final isActive = auction['status'] == 'active';
+
+              // Safely extract location data
+              String locationText = 'Location not specified';
+              if (auction['location'] != null) {
+                if (auction['location'] is String) {
+                  locationText = auction['location'];
+                } else if (auction['location'] is Map) {
+                  // Assuming the map has an 'address' field - adjust according to your data structure
+                  final locationMap =
+                      auction['location'] as Map<String, dynamic>;
+                  locationText =
+                      locationMap['address'] ?? 'Location not specified';
+                }
+              }
+
               return Card(
-                margin: EdgeInsets.only(bottom: 16),
-                child: ListTile(
-                  title: Text(
-                      '${auction['cropDetails']['type']} - ${auction['cropDetails']['quantity']} quintals'),
-                  subtitle: Text('Status: ${auction['status']}'),
+                margin: const EdgeInsets.only(bottom: 16),
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => FarmerAuctionStatusPage(
-                          auctionId: auction.id,
+                          auctionId: snapshot.data!.docs[index].id,
                         ),
                       ),
                     );
                   },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    auction['cropDetails']['type'].toString(),
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${auction['cropDetails']['quantity']} quintals',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? Colors.green.shade100
+                                    : Colors.orange.shade100,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isActive ? Icons.timer : Icons.check_circle,
+                                    size: 16,
+                                    color: isActive
+                                        ? Colors.green.shade700
+                                        : Colors.orange.shade700,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isActive ? 'Active' : 'Completed',
+                                    style: TextStyle(
+                                      color: isActive
+                                          ? Colors.green.shade700
+                                          : Colors.orange.shade700,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.monetization_on,
+                                  size: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '₹${auction['currentBid'] ?? auction['cropDetails']['basePrice']}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Flexible(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.location_on,
+                                    size: 20,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      locationText,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },
           );
         },
-      ),
-      // Placeholder for additional pages
+      )
     ];
 
     return Scaffold(
