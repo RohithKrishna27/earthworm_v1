@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
 import 'package:project_earthworm/farmer/calculator/calculator_home.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
+import 'insurance_signup.dart';
 
 enum Language { English, Kannada, Hindi }
 
@@ -256,6 +257,15 @@ class HomeScreen extends StatelessWidget {
                 Color.fromARGB(255, 1, 96, 6), // Darkest green
                 boxWidth,
               ),
+              _buildLargeFeatureBox(
+                context,
+                localizedStrings['learn']!,
+                localizedStrings['gain_knowledge']!,
+                Icons.eco,
+                '/insurance',
+                Color.fromARGB(255, 1, 96, 6), // Darkest green
+                boxWidth,
+              ),
             ],
           ),
         ),
@@ -352,6 +362,8 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => SellCropsScreen());
       case '/crop-assistance':
         return MaterialPageRoute(builder: (_) => CropAssistanceScreen());
+      case '/insurance':
+        return MaterialPageRoute(builder: (_) => FarmerInsuranceSignup());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
