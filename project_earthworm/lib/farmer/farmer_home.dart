@@ -91,7 +91,7 @@ class _FarmerHomeState extends State<FarmerHome> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Farmer Home'),
+        title: Text('Home'),
         actions: [
           DropdownButton<Language>(
             value: _selectedLanguage,
