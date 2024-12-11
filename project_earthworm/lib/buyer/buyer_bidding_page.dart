@@ -63,31 +63,48 @@ class _BuyerBiddingPageState extends State<BuyerBiddingPage>
 
   void _setupAuctionEndCheck() {
     _timer = Timer.periodic(Duration(seconds: 30), (timer) async {
-      final auctionDoc = await FirebaseFirestore.instance
-          .collection('auctions')
-          .doc(widget.auctionId)
-          .get();
+      try {
+        final auctionDoc = await FirebaseFirestore.instance
+            .collection('auctions')
+            .doc(widget.auctionId)
+            .get();
 
-      if (!auctionDoc.exists) return;
+        if (!auctionDoc.exists) return;
 
-      final auctionData = auctionDoc.data() as Map<String, dynamic>;
-      final endTime = (auctionData['endTime'] as Timestamp).toDate();
+        final auctionData = auctionDoc.data() as Map<String, dynamic>;
+        final endTime = (auctionData['endTime'] as Timestamp).toDate();
 
-      if (DateTime.now().isAfter(endTime) && auctionData['winner'] == null) {
-        // Auction has ended and winner hasn't been set
-        final currentBidder = auctionData['currentBidder'];
-        if (currentBidder != null) {
-          await FirebaseFirestore.instance
-              .collection('auctions')
-              .doc(widget.auctionId)
-              .update({
-            'winner': currentBidder['id'],
-            'winningBid': auctionData['currentBid'],
-            'winningBidder': currentBidder,
-            'status': 'completed',
-            'completedAt': FieldValue.serverTimestamp(),
-          });
+        if (DateTime.now().isAfter(endTime) &&
+            auctionData['status'] == 'active' &&
+            auctionData['winner'] == null) {
+          final currentBidder = auctionData['currentBidder'];
+          if (currentBidder != null) {
+            await FirebaseFirestore.instance
+                .collection('auctions')
+                .doc(widget.auctionId)
+                .update({
+              'status': 'completed',
+              'completedAt': FieldValue.serverTimestamp(),
+              'lastUpdated': FieldValue.serverTimestamp(),
+              'winner': currentBidder['id'],
+              'winnerDetails': currentBidder,
+              'winningBid': auctionData['currentBid'],
+              'winningBidder': currentBidder,
+            });
+          } else {
+            // Handle case where auction ends with no bids
+            await FirebaseFirestore.instance
+                .collection('auctions')
+                .doc(widget.auctionId)
+                .update({
+              'status': 'completed',
+              'completedAt': FieldValue.serverTimestamp(),
+              'lastUpdated': FieldValue.serverTimestamp(),
+            });
+          }
         }
+      } catch (e) {
+        print('Error in auction end check: $e');
       }
     });
   }

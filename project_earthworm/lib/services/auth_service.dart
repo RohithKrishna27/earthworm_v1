@@ -53,57 +53,6 @@ class AuthService with ChangeNotifier {
   }
 
   // Sign In with Email or Custom User ID
-  Future<UserModel> signInWithIdentifier({
-    required String identifier,
-    required String password,
-  }) async {
-    try {
-      late String email;
-
-      // Determine if the identifier is an email or a customUserID
-      if (identifier.contains('@')) {
-        // Input is an Email
-        email = identifier;
-      } else {
-        // Input is a Custom User ID, query Firestore to fetch the Email
-        final querySnapshot = await _firestore
-            .collection('users')
-            .where('customUserID', isEqualTo: identifier)
-            .get();
-
-        if (querySnapshot.docs.isEmpty) {
-          throw FirebaseAuthException(
-            code: 'user-not-found',
-            message: 'No user found with this custom user ID',
-          );
-        }
-
-        // Retrieve the email from the user document
-        email = querySnapshot.docs.first.data()['email'];
-      }
-
-      // Authenticate using Email and Password
-      final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // Fetch the user data from Firestore
-      final userData = await _firestore
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .get();
-
-      // Convert Firestore data into a UserModel
-      final user = UserModel.fromMap(
-          userData.data() as Map<String, dynamic>, userCredential.user!.uid);
-      _currentUser = user;
-      notifyListeners();
-      return user;
-    } catch (e) {
-      throw _handleAuthException(e);
-    }
-  }
 
   // Sign In with Email
   Future<UserModel> signInWithEmail(String email, String password) async {

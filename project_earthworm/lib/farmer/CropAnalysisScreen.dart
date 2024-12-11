@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:just_audio/just_audio.dart';
+import 'dart:async';  // Add this for Completer and StreamSubscription
+
 
 enum Language { English, Kannada, Hindi }
 
@@ -15,6 +18,9 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
   String _seedVarietyDetails = '';
   String _geminiResponseForCrop = '';
   String _geminiResponseForVariety = '';
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlayingCrop = false;
+  bool _isPlayingVariety = false;
 
   // Define translations for the texts
   final Map<Language, Map<String, String>> _localizedStrings = {
@@ -91,6 +97,139 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
   String _selectedCrop = 'Rice';
   String _selectedState = 'Punjab';
 
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    _nController.dispose();
+    _pController.dispose();
+    _kController.dispose();
+    _temperatureController.dispose();
+    _humidityController.dispose();
+    _phController.dispose();
+    _rainfallController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _textToSpeech(String text, bool isForCrop) async {
+    // Split text into chunks of approximately 4800 bytes (leaving buffer for encoding)
+    List<String> chunks = _splitTextIntoChunks(text);
+    
+    try {
+      setState(() {
+        if (isForCrop) {
+          _isPlayingCrop = true;
+        } else {
+          _isPlayingVariety = true;
+        }
+      });
+
+      // Play each chunk sequentially
+      for (String chunk in chunks) {
+        if (!(isForCrop ? _isPlayingCrop : _isPlayingVariety)) {
+          break; // Stop if play state has changed
+        }
+
+        final response = await http.post(
+          Uri.parse('https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyDBXE3N7aHSOfpxgV9qVNXsy0F20MfsXIg'),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: json.encode({
+            'input': {'text': chunk},
+            'voice': {
+              'languageCode': _selectedLanguage == Language.Hindi ? 'hi-IN' :
+                            _selectedLanguage == Language.Kannada ? 'kn-IN' : 'en-US',
+              'name': _selectedLanguage == Language.Hindi ? 'hi-IN-Wavenet-C' :
+                      _selectedLanguage == Language.Kannada ? 'kn-IN-Wavenet-A' : 'en-US-Wavenet-D',
+            },
+            'audioConfig': {
+              'audioEncoding': 'MP3',
+              'pitch': 0,
+              'speakingRate': 1,
+            },
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          final audioContent = json.decode(response.body)['audioContent'];
+          final audioBytes = base64.decode(audioContent);
+          final audioUrl = Uri.dataFromBytes(audioBytes, mimeType: 'audio/mp3').toString();
+
+          await _audioPlayer.setUrl(audioUrl);
+          await _audioPlayer.play();
+          
+          // Wait for the current chunk to finish playing
+          await _waitForCompletion();
+        } else {
+          print('Failed to convert chunk to speech: ${response.body}');
+          break;
+        }
+      }
+    } catch (e) {
+      print('Error in text to speech: $e');
+    } finally {
+      setState(() {
+        if (isForCrop) {
+          _isPlayingCrop = false;
+        } else {
+          _isPlayingVariety = false;
+        }
+      });
+    }
+  }
+
+  Future<void> _waitForCompletion() async {
+    Completer<void> completer = Completer<void>();
+    
+    StreamSubscription? subscription;
+    subscription = _audioPlayer.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        subscription?.cancel();
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      }
+    });
+
+    await completer.future;
+  }
+
+  List<String> _splitTextIntoChunks(String text) {
+    List<String> chunks = [];
+    const int maxBytes = 4800; // Buffer for encoding overhead
+    
+    while (text.isNotEmpty) {
+      String chunk = text;
+      
+      // If text is longer than max bytes, find a good breaking point
+      if (text.length > maxBytes) {
+        chunk = text.substring(0, maxBytes);
+        
+        // Try to break at sentence end
+        int lastPeriod = chunk.lastIndexOf('. ');
+        if (lastPeriod != -1) {
+          chunk = text.substring(0, lastPeriod + 1);
+        } else {
+          // If no sentence break, try to break at comma
+          int lastComma = chunk.lastIndexOf(', ');
+          if (lastComma != -1) {
+            chunk = text.substring(0, lastComma + 1);
+          } else {
+            // If no comma, break at last space
+            int lastSpace = chunk.lastIndexOf(' ');
+            if (lastSpace != -1) {
+              chunk = text.substring(0, lastSpace);
+            }
+          }
+        }
+      }
+      
+      chunks.add(chunk);
+      text = text.substring(chunk.length).trim();
+    }
+    
+    return chunks;
+  }
   Future<void> _fetchAICropSuggestion() async {
     try {
       final response = await http.post(
@@ -110,12 +249,9 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         setState(() {
-          // Access the prediction and confidence directly from the response
           final prediction = responseData['prediction'];
           final confidence = responseData['confidence'];
-
           _aiCropSuggestion = "Suggested Crop: $prediction with confidence: $confidence.";
-          // Call Gemini API here for the crop prediction
           _fetchGeminiResponseForCrop(prediction);
         });
       } else {
@@ -131,9 +267,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
   }
 
   Future<void> _fetchGeminiResponseForCrop(String cropPrediction) async {
-    // Customize your prompt based on the cropPrediction
     String prompt = "Give me detailed information about $cropPrediction as a crop including its benefits, growing conditions, and best practices.";
-    
     await _fetchGeminiResponse(prompt, true);
   }
 
@@ -147,12 +281,10 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
           if (data.isNotEmpty) {
-            // Access the first item in the response array
             final variety = data[0];
             _seedVarietyDetails = "Name: ${variety['Name of Variety']}, "
                 "Features: ${variety['Salient Features']}, "
                 "States: ${variety['States']}";
-            // Call Gemini API for seed variety
             _fetchGeminiResponseForVariety(variety['Name of Variety']);
           } else {
             _seedVarietyDetails = "No varieties found.";
@@ -171,16 +303,14 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
   }
 
   Future<void> _fetchGeminiResponseForVariety(String varietyName) async {
-    // Customize your prompt based on the varietyName
     String prompt = "Provide detailed information about the seed variety: $varietyName including its benefits and cultivation practices.";
-    
     await _fetchGeminiResponse(prompt, false);
   }
 
   Future<void> _fetchGeminiResponse(String prompt, bool isForCrop) async {
     try {
       final response = await http.post(
-        Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCAGtWDRBB3dQf9eqiJLqAsjrUHpQB3seI"), // Replace with your actual Gemini API endpoint
+        Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCAGtWDRBB3dQf9eqiJLqAsjrUHpQB3seI"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "contents": [
@@ -231,24 +361,59 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
     }
   }
 
-  @override
+  Widget _buildGeminiResponse(String response, bool isForCrop) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          response.isEmpty ? 
+            "No details from Gemini." : 
+            response,
+          style: TextStyle(fontSize: 16),
+        ),
+        if (response.isNotEmpty)
+          ElevatedButton.icon(
+            onPressed: isForCrop && _isPlayingCrop || !isForCrop && _isPlayingVariety ?
+              () => _audioPlayer.stop() :
+              () => _textToSpeech(response, isForCrop),
+            icon: Icon(
+              isForCrop && _isPlayingCrop || !isForCrop && _isPlayingVariety ?
+                Icons.stop : Icons.play_arrow
+            ),
+            label: Text(
+              isForCrop && _isPlayingCrop || !isForCrop && _isPlayingVariety ?
+                'Stop' : 'Listen'
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF66BB6A),
+              foregroundColor: Colors.white,
+            ),
+          ),
+      ],
+    );
+  }
+@override
   Widget build(BuildContext context) {
-    final Color primaryGreen = Color(0xFF66BB6A); // Vibrant green
-    final Color secondaryGreen = Color(0xFF1B5E20); // Dark green
-    final Color backgroundColor = Color(0xFFF1F8E9); // Light green background
+    final Color primaryGreen = Color(0xFF66BB6A);
+    final Color secondaryGreen = Color(0xFF1B5E20);
+    final Color backgroundColor = Color(0xFFF1F8E9);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
         title: Text('Crop Analysis'),
+        backgroundColor: primaryGreen,
         actions: [
           DropdownButton<Language>(
             value: _selectedLanguage,
             items: Language.values.map((Language language) {
               return DropdownMenuItem<Language>(
                 value: language,
-                child: Text(language.toString().split('.').last), // Displaying language name
+                child: Text(
+                  language.toString().split('.').last,
+                  style: TextStyle(color: Colors.black),
+                ),
               );
             }).toList(),
             onChanged: _switchLanguage,
@@ -294,48 +459,61 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
                       controller: _nController,
                       decoration: InputDecoration(
                         labelText: _localizedStrings[_selectedLanguage]!['n_label'],
+                        border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                     ),
+                    SizedBox(height: 8),
                     TextField(
                       controller: _pController,
                       decoration: InputDecoration(
                         labelText: _localizedStrings[_selectedLanguage]!['p_label'],
+                        border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                     ),
+                    SizedBox(height: 8),
                     TextField(
                       controller: _kController,
                       decoration: InputDecoration(
                         labelText: _localizedStrings[_selectedLanguage]!['k_label'],
+                        border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                     ),
+                    SizedBox(height: 8),
                     TextField(
                       controller: _temperatureController,
                       decoration: InputDecoration(
                         labelText: _localizedStrings[_selectedLanguage]!['temperature_label'],
+                        border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                     ),
+                    SizedBox(height: 8),
                     TextField(
                       controller: _humidityController,
                       decoration: InputDecoration(
                         labelText: _localizedStrings[_selectedLanguage]!['humidity_label'],
+                        border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                     ),
+                    SizedBox(height: 8),
                     TextField(
                       controller: _phController,
                       decoration: InputDecoration(
                         labelText: _localizedStrings[_selectedLanguage]!['ph_label'],
+                        border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                     ),
+                    SizedBox(height: 8),
                     TextField(
                       controller: _rainfallController,
                       decoration: InputDecoration(
                         labelText: _localizedStrings[_selectedLanguage]!['rainfall_label'],
+                        border: OutlineInputBorder(),
                       ),
                       keyboardType: TextInputType.number,
                     ),
@@ -344,22 +522,20 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
                       onPressed: _fetchAICropSuggestion,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryGreen,
+                        minimumSize: Size(double.infinity, 50),
                       ),
                       child: Text(
                         _localizedStrings[_selectedLanguage]!['get_suggestion']!,
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
                     SizedBox(height: 16),
                     Text(
                       _aiCropSuggestion.isEmpty ? "No suggestions available." : _aiCropSuggestion,
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 16),
-                    Text(
-                      _geminiResponseForCrop.isEmpty ? "No details from Gemini." : _geminiResponseForCrop,
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    _buildGeminiResponse(_geminiResponseForCrop, true),
                   ],
                 ),
               ),
@@ -391,66 +567,81 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    DropdownButton<String>(
-                      value: _selectedCrop,
-                      items: ['Rice', 'Maize', 'Wheat', 'Groundnut', 'Cotton', 'Sugar-Cane']
-                          .map((String crop) {
-                        return DropdownMenuItem<String>(
-                          value: crop,
-                          child: Text(crop),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedCrop = newValue!;
-                        });
-                      },
-                      hint: Text(_localizedStrings[_selectedLanguage]!['crop_name']!),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: DropdownButton<String>(
+                        value: _selectedCrop,
+                        isExpanded: true,
+                        items: ['Rice', 'Maize', 'Wheat', 'Groundnut', 'Cotton', 'Sugar-Cane']
+                            .map((String crop) {
+                          return DropdownMenuItem<String>(
+                            value: crop,
+                            child: Text(crop),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedCrop = newValue!;
+                          });
+                        },
+                        hint: Text(_localizedStrings[_selectedLanguage]!['crop_name']!),
+                      ),
                     ),
-                    DropdownButton<String>(
-                      value: _selectedState,
-                      items: ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal']
-                          .map((String state) {
-                        return DropdownMenuItem<String>(
-                          value: state,
-                          child: Text(state),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedState = newValue!;
-                        });
-                      },
-                      hint: Text(_localizedStrings[_selectedLanguage]!['state']!),
+                    SizedBox(height: 16),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: DropdownButton<String>(
+                        value: _selectedState,
+                        isExpanded: true,
+                        items: ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal']
+                            .map((String state) {
+                          return DropdownMenuItem<String>(
+                            value: state,
+                            child: Text(state),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedState = newValue!;
+                          });
+                        },
+                        hint: Text(_localizedStrings[_selectedLanguage]!['state']!),
+                      ),
                     ),
                     SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _fetchSeedVarietyDetails,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryGreen,
+                        minimumSize: Size(double.infinity, 50),
                       ),
                       child: Text(
                         _localizedStrings[_selectedLanguage]!['search']!,
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
                     SizedBox(height: 16),
                     Text(
                       _seedVarietyDetails.isEmpty ? "No details available." : _seedVarietyDetails,
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 16),
-                    Text(
-                      _geminiResponseForVariety.isEmpty ? "No details from Gemini." : _geminiResponseForVariety,
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    _buildGeminiResponse(_geminiResponseForVariety, false),
                   ],
                 ),
               ),
+              SizedBox(height: 24),
             ],
           ),
         ),
       ),
     );
-  }
-}
+  }}
