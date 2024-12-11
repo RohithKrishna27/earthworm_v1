@@ -1,5 +1,206 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:confetti/confetti.dart';
+import 'dart:math';
+import 'package:vibration/vibration.dart';
+
+class PaymentSlider extends StatefulWidget {
+  final double amount;
+  //final VoidCallback onPaymentComplete;
+
+  const PaymentSlider({
+    Key? key,
+    required this.amount,
+    //required this.onPaymentComplete,
+  }) : super(key: key);
+
+  @override
+  _PaymentSliderState createState() => _PaymentSliderState();
+}
+
+class _PaymentSliderState extends State<PaymentSlider>
+    with SingleTickerProviderStateMixin {
+  double _progress = 0.0;
+  bool _isCompleted = false;
+  bool _isDragging = false;
+  late ConfettiController _confettiController;
+  late AnimationController _checkmarkController;
+  late Animation<double> _checkmarkAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+
+    _checkmarkController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _checkmarkAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(
+      parent: _checkmarkController,
+      curve: Curves.elasticOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    _checkmarkController.dispose();
+    super.dispose();
+  }
+
+  void _handleComplete() async {
+    if (!_isCompleted) {
+      setState(() {
+        _isCompleted = true;
+        _progress = 1.0;
+      });
+
+      if (await Vibration.hasVibrator() ?? false) {
+        Vibration.vibrate(duration: 100);
+      }
+
+      _checkmarkController.forward();
+      _confettiController.play();
+      //widget.onPaymentComplete.call();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sliderHeight = 60.0;
+    final containerPadding = 20.0;
+
+    return LayoutBuilder(builder: (context, constraints) {
+      final maxWidth = constraints.maxWidth - (containerPadding * 2);
+      final circlePosition = _isCompleted
+          ? maxWidth - sliderHeight
+          : _progress * (maxWidth - sliderHeight);
+
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirection: pi / 2,
+              maxBlastForce: 10,
+              minBlastForce: 5,
+              emissionFrequency: 0.05,
+              numberOfParticles: 75,
+              gravity: 0.2,
+              colors: [
+                Colors.green,
+                Colors.lightGreen,
+                Colors.yellow,
+                Colors.greenAccent,
+              ],
+            ),
+          ),
+          Container(
+            height: sliderHeight,
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: containerPadding),
+            child: GestureDetector(
+              onHorizontalDragStart: (_) => setState(() => _isDragging = true),
+              onHorizontalDragEnd: (_) {
+                setState(() => _isDragging = false);
+                if (_progress > 0.7) {
+                  _handleComplete();
+                } else {
+                  setState(() => _progress = 0.0);
+                }
+              },
+              onHorizontalDragUpdate: (details) {
+                if (!_isCompleted) {
+                  final double newProgress =
+                      (_progress + details.delta.dx / (maxWidth - sliderHeight))
+                          .clamp(0.0, 1.0);
+                  setState(() => _progress = newProgress);
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(sliderHeight / 2),
+                ),
+                child: Stack(
+                  children: [
+                    FractionallySizedBox(
+                      widthFactor: _progress,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.lightGreen.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(sliderHeight / 2),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: circlePosition,
+                      child: _isCompleted
+                          ? AnimatedBuilder(
+                              animation: _checkmarkAnimation,
+                              builder: (context, child) {
+                                return Container(
+                                  width: sliderHeight,
+                                  height: sliderHeight,
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: (sliderHeight * 0.6) *
+                                        _checkmarkAnimation.value,
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              width: sliderHeight,
+                              height: sliderHeight,
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                shape: BoxShape.circle,
+                                boxShadow: _isDragging
+                                    ? [
+                                        BoxShadow(
+                                          color: Colors.green.withOpacity(0.5),
+                                          blurRadius: 10,
+                                          spreadRadius: 2,
+                                        )
+                                      ]
+                                    : null,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Pay\n₹${widget.amount.toStringAsFixed(2)}',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+  }
+}
 
 class PaymentPage extends StatelessWidget {
   final double amount;
@@ -31,7 +232,6 @@ class PaymentPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Contact Details
             const Text(
               'Contact Details',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -41,7 +241,6 @@ class PaymentPage extends StatelessWidget {
             Text('Phone: $farmerPhone'),
             const SizedBox(height: 20),
 
-            // Order Summary
             const Text(
               'Order Summary',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -57,7 +256,6 @@ class PaymentPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // QR Code from Google Drive
             const Text(
               'Scan to Pay',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -65,7 +263,7 @@ class PaymentPage extends StatelessWidget {
             const SizedBox(height: 10),
             Center(
               child: Image.network(
-                'https://drive.google.com/uc?id=1BD_m2y6x7tlkFv1r-g5oQ5GtzXQ5Kgt_', // Direct link to your QR code image
+                'https://drive.google.com/uc?id=1BD_m2y6x7tlkFv1r-g5oQ5GtzXQ5Kgt_',
                 width: 150,
                 height: 150,
                 fit: BoxFit.cover,
@@ -73,7 +271,6 @@ class PaymentPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Payment Details
             const Text(
               'Payment Details',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -143,23 +340,10 @@ class PaymentPage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Pay Button
+            // Payment Slider
             Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Implement payment gateway integration here
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Payment functionality not implemented.'),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green, // Button color
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  textStyle: const TextStyle(fontSize: 18),
-                ),
-                child: Text('Pay ₹${_formatter.format(amount)}'),
+              child: PaymentSlider(
+                amount: amount,
               ),
             ),
           ],
@@ -167,19 +351,4 @@ class PaymentPage extends StatelessWidget {
       ),
     );
   }
-}
-
-void main() {
-  runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false, // Remove debug banner
-      home: PaymentPage(
-        amount: 250.28,
-        isSupport: true,
-        cropName: 'Wheat',
-        farmerName: 'John Doe',
-        farmerPhone: '+1234567890',
-      ),
-    ),
-  );
 }
