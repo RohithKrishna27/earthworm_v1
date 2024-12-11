@@ -1,12 +1,9 @@
-// crop_questionnaire_screen.dart
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'crop_schedule.dart';
 
 class CropQuestionnaireScreen extends StatefulWidget {
-  final String cropName;
-
-  const CropQuestionnaireScreen({Key? key, required this.cropName})
-      : super(key: key);
+  const CropQuestionnaireScreen({super.key});
 
   @override
   State<CropQuestionnaireScreen> createState() =>
@@ -18,16 +15,75 @@ class _CropQuestionnaireScreenState extends State<CropQuestionnaireScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Form values
-  String? fieldSize;
+  String? location;
+  String? cropType;
+  bool recommendCrop = false;
+  String? landSize;
   DateTime? plantingDate;
-  String? soilType;
   String? irrigationType;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception(
+            'Location services are disabled. Please enable them in settings.');
+      }
+
+      // Check and request location permissions
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception(
+              'Location permissions are denied. Grant permissions to continue.');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception(
+            'Location permissions are permanently denied. Enable them in settings.');
+      }
+
+      // Fetch the current location
+      setState(() => _isLoading = true);
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
+
+      // Update location and proceed to next step
+      setState(() {
+        location = "Lat: ${position.latitude}, Long: ${position.longitude}";
+        _isLoading = false;
+        _currentStep = 1; // Move to next step automatically
+      });
+    } catch (e) {
+      // Log and display user-friendly error messages
+      print('Error getting location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error getting location: ${e.toString()}'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.cropName} Details'),
+        title: Text('Farming Plan'),
         backgroundColor: Colors.green[700],
       ),
       body: Form(
@@ -35,19 +91,21 @@ class _CropQuestionnaireScreenState extends State<CropQuestionnaireScreen> {
         child: Stepper(
           currentStep: _currentStep,
           onStepContinue: () {
-            if (_currentStep < 3) {
-              setState(() => _currentStep++);
+            if (_currentStep < 4) {  // Ensure the last step index is 4
+              setState(() {
+                _currentStep++;
+              });
             } else {
-              // Navigate to schedule screen
+              // Navigate to the next screen (as before)
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => FarmingScheduleScreen(
-                    cropName: widget.cropName,
-                    fieldSize: fieldSize ?? '',
+                    cropName: cropType ?? 'No crop selected', // Handle "No crop selected"
+                    fieldSize: landSize ?? '',
                     plantingDate: plantingDate ?? DateTime.now(),
-                    soilType: soilType ?? '',
-                    irrigationType: irrigationType ?? '',
+                    location: location ?? '',
+                    farmingType: irrigationType ?? '', // Pass irrigation type as farming type
                   ),
                 ),
               );
@@ -55,22 +113,70 @@ class _CropQuestionnaireScreenState extends State<CropQuestionnaireScreen> {
           },
           onStepCancel: () {
             if (_currentStep > 0) {
-              setState(() => _currentStep--);
+              setState(() {
+                _currentStep--;
+              });
             }
           },
           steps: [
             Step(
-              title: const Text('Field Size'),
-              content: TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Enter field size in acres',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) => fieldSize = value,
-                validator: (value) =>
-                    value?.isEmpty ?? true ? 'Please enter field size' : null,
+              title: const Text('Location'),
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _isLoading
+                      ? const CircularProgressIndicator()
+                      : Text(location ?? 'Location not fetched'),
+                ],
               ),
               isActive: _currentStep >= 0,
+            ),
+            Step(
+              title: const Text('Crop Type'),
+              content: Column(
+                children: [
+                  CheckboxListTile(
+                    title: const Text('Recommend crop'),
+                    value: recommendCrop,
+                    onChanged: (value) {
+                      setState(() {
+                        recommendCrop = value ?? false;
+                        // If recommended, set cropType to "Recommend a crop"
+                        if (recommendCrop) {
+                          cropType = 'Recommend a crop';
+                        } else {
+                          cropType = null; // Reset cropType if not recommended
+                        }
+                      });
+                    },
+                  ),
+                  if (!recommendCrop)
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'Enter crop type',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) => cropType = value,
+                      validator: (value) => recommendCrop || (value?.isNotEmpty ?? false)
+                          ? null
+                          : 'Please enter or recommend a crop type',
+                    ),
+                ],
+              ),
+              isActive: _currentStep >= 1,
+            ),
+            Step(
+              title: const Text('Land Size'),
+              content: TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Enter land size in acres',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) => landSize = value,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Please enter land size' : null,
+              ),
+              isActive: _currentStep >= 2,
             ),
             Step(
               title: const Text('Planting Date'),
@@ -98,24 +204,7 @@ class _CropQuestionnaireScreenState extends State<CropQuestionnaireScreen> {
                   ),
                 ),
               ),
-              isActive: _currentStep >= 1,
-            ),
-            Step(
-              title: const Text('Soil Type'),
-              content: DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Select soil type',
-                ),
-                items: ['Clay', 'Loamy', 'Sandy', 'Silt', 'Peaty']
-                    .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => soilType = value),
-              ),
-              isActive: _currentStep >= 2,
+              isActive: _currentStep >= 3,
             ),
             Step(
               title: const Text('Irrigation Type'),
@@ -124,15 +213,22 @@ class _CropQuestionnaireScreenState extends State<CropQuestionnaireScreen> {
                   border: OutlineInputBorder(),
                   labelText: 'Select irrigation type',
                 ),
-                items: ['Drip', 'Sprinkler', 'Flood', 'Furrow', 'Rain-fed']
-                    .map((type) => DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        ))
+                items: [
+                  'Drip',
+                  'Sprinkler',
+                  'Flood',
+                  'Furrow',
+                  'Rain-fed'
+                ].map((type) => DropdownMenuItem(
+                      value: type,
+                      child: Text(type),
+                    ))
                     .toList(),
                 onChanged: (value) => setState(() => irrigationType = value),
+                validator: (value) =>
+                    value == null ? 'Please select an irrigation type' : null,
               ),
-              isActive: _currentStep >= 3,
+              isActive: _currentStep >= 4,
             ),
           ],
         ),

@@ -19,6 +19,7 @@ import 'package:project_earthworm/sign-in-up-screeens/splash_screen.dart';
 import 'package:project_earthworm/farmer/knowledge/learn_home.dart';
 import 'farmer/crop_scheduling/crop_scheduling.dart';
 import 'farmer/crop_scheduling/traditional/crop_choice.dart';
+import 'package:project_earthworm/farmer/CropAnalysisScreen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,8 +50,8 @@ class MyApp extends StatelessWidget {
           '/buyer/home': (context) => BuyerMain(),
           '/dashboard': (context) => OnboardingScreen(),
           '/disease-detection': (context) => AdvanceDiseasesDetection(),
-          // '/seed-varieties' :(context) => CropAnalysisScreen(),
-          //'/map-visualization':(context) => UserNameFetcher(),
+          '/seed-varieties' :(context) => CropAnalysisScreen(),
+          '/map-visualization':(context) => UserNameFetcher(),
           '/crop-scheduling': (context) => CropSchedulingScreen(),
           '/crop-assistance': (context) => CropAssistanceScreen(),
           '/sell-crops': (context) => SellingCropHomePage(),

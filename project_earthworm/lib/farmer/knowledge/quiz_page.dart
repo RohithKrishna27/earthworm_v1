@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class QuizPage extends StatefulWidget {
   final String topic;
@@ -12,15 +14,15 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
-  String _question = ''; // Initialize with an empty string
-  List<String> _options = []; // Initialize with an empty list
-  String _correctAnswer = ''; // Initialize with an empty string
-  String _explanation = ''; // Initialize with an empty string
-  String? _selectedAnswer; // Nullable to match the Radio widget
-  String _result = ''; // Result after submission
+  String _question = '';
+  List<String> _options = [];
+  String _correctAnswer = '';
+  String _explanation = '';
+  String? _selectedAnswer;
+  String _result = '';
 
-  bool _answered = false; // To track if the question is answered
-  bool _isLoading = false; // To track the loading state
+  bool _answered = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -28,16 +30,16 @@ class _QuizPageState extends State<QuizPage> {
     _fetchQuizData();
   }
 
-  // Fetch quiz data from Gemini API based on the selected topic
   Future<void> _fetchQuizData() async {
     setState(() {
-      _isLoading = true; // Show loading screen when fetching data
-      _answered = false; // Reset answered flag before fetching new data
+      _isLoading = true;
+      _answered = false;
     });
 
     try {
       final response = await http.post(
-        Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCAGtWDRBB3dQf9eqiJLqAsjrUHpQB3seI"), // Replace with your valid API key
+        Uri.parse(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCAGtWDRBB3dQf9eqiJLqAsjrUHpQB3seI"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "contents": [
@@ -45,11 +47,11 @@ class _QuizPageState extends State<QuizPage> {
               "parts": [
                 {
                   "text": "Generate a quiz based on the topic '${widget.topic}'. The response should contain:\n"
-                          "- A question (first line),\n"
-                          "- Four options (second line, separated by commas),\n"
-                          "- The correct answer (third line, format exactly like in the option),\n"
-                          "- An explanation (fourth line).\n"
-                          "Please do not use ** for bold formatting."
+                      "- A question (first line),\n"
+                      "- Four options (second line, separated by commas),\n"
+                      "- The correct answer (third line, format exactly like in the option),\n"
+                      "- An explanation (fourth line).\n"
+                      "Please do not use ** for bold formatting."
                 }
               ]
             }
@@ -59,18 +61,18 @@ class _QuizPageState extends State<QuizPage> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        String fullResponse = responseData['candidates'][0]['content']['parts'][0]['text'];
+        String fullResponse =
+            responseData['candidates'][0]['content']['parts'][0]['text'];
 
-        // Split and clean the response
-        List<String> responseParts = fullResponse.split("\n").map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        List<String> responseParts =
+            fullResponse.split("\n").map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
 
-        // Ensure the response has at least 4 parts: question, options, correct answer, explanation
         if (responseParts.length >= 4) {
           setState(() {
-            _question = responseParts[0]; // Question comes first
-            _options = responseParts[1].split(",").map((option) => option.trim()).toList(); // Options come second (split by commas)
-            _correctAnswer = responseParts[2].replaceFirst("Correct answer: ", "").trim(); // Correct answer comes third
-            _explanation = responseParts[3].trim(); // Explanation comes fourth
+            _question = responseParts[0];
+            _options = responseParts[1].split(",").map((option) => option.trim()).toList();
+            _correctAnswer = responseParts[2].replaceFirst("Correct answer: ", "").trim();
+            _explanation = responseParts[3].trim();
           });
         } else {
           setState(() {
@@ -97,43 +99,62 @@ class _QuizPageState extends State<QuizPage> {
       });
     } finally {
       setState(() {
-        _isLoading = false; // Hide loading screen once data is fetched
+        _isLoading = false;
       });
     }
   }
 
-  // Handle answer selection
   void _onAnswerSelected(String? answer) {
     setState(() {
-      _selectedAnswer = answer; // Nullable answer
+      _selectedAnswer = answer;
     });
   }
 
-  // Handle quiz submission and check if the answer is correct
-  void _submitQuiz() {
+  Future<void> _storeScoreInFirestore() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser == null) {
+        print("Error: No authenticated user found.");
+        return;
+      }
+
+      String farmerDocId = currentUser.uid;
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      await firestore.collection('farmers').doc(farmerDocId).set({
+        'scores': {
+          widget.topic: FieldValue.increment(10),
+        }
+      }, SetOptions(merge: true));
+    } catch (e) {
+      print("Error storing score: $e");
+    }
+  }
+
+  void _submitQuiz() async {
     setState(() {
       _answered = true;
       if (_selectedAnswer == _correctAnswer) {
         _result = 'Correct!';
+        _storeScoreInFirestore();
       } else {
         _result = 'Incorrect. The correct answer is $_correctAnswer.';
       }
     });
   }
 
-  // Handle the next question
   void _nextQuestion() {
     setState(() {
-      _isLoading = true; // Show loading screen before fetching new data
-      _question = ''; // Clear the question
-      _options = []; // Clear the options
-      _correctAnswer = ''; // Clear the correct answer
-      _explanation = ''; // Clear the explanation
-      _selectedAnswer = null; // Clear the selected answer
-      _result = ''; // Clear the result
-      _answered = false; // Reset answered flag
+      _isLoading = true;
+      _question = '';
+      _options = [];
+      _correctAnswer = '';
+      _explanation = '';
+      _selectedAnswer = null;
+      _result = '';
+      _answered = false;
     });
-    // Fetch new question data
     _fetchQuizData();
   }
 
@@ -143,16 +164,12 @@ class _QuizPageState extends State<QuizPage> {
       appBar: AppBar(
         title: Text('Quiz: ${widget.topic}'),
       ),
-      body: SingleChildScrollView( // Wrap the body in a SingleChildScrollView
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Display loading indicator if question is not yet loaded
-            if (_isLoading) 
-              Center(child: CircularProgressIndicator()),
-
-            // Display question with icon before it
+            if (_isLoading) Center(child: CircularProgressIndicator()),
             if (_question.isNotEmpty)
               Row(
                 children: [
@@ -166,10 +183,7 @@ class _QuizPageState extends State<QuizPage> {
                   ),
                 ],
               ),
-            
             SizedBox(height: 20),
-            
-            // Display options as radio buttons
             if (_options.isNotEmpty)
               ..._options.map((option) {
                 return ListTile(
@@ -181,31 +195,22 @@ class _QuizPageState extends State<QuizPage> {
                   ),
                 );
               }).toList(),
-            
             SizedBox(height: 20),
-            
-            // Submit button
             ElevatedButton(
-              onPressed: _submitQuiz,
+              onPressed: _answered ? null : _submitQuiz,
               child: Text('Submit'),
             ),
-            
             SizedBox(height: 20),
-
-            // Show the result (correct or incorrect)
             if (_answered)
               Text(
                 _result,
                 style: TextStyle(
-                  fontSize: 18, 
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: _result == 'Correct!' ? Colors.green : Colors.red, // Green for correct, red for incorrect
+                  color: _result == 'Correct!' ? Colors.green : Colors.red,
                 ),
               ),
-            
             SizedBox(height: 20),
-
-            // Show the correct answer and explanation after submission
             if (_answered)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,10 +226,7 @@ class _QuizPageState extends State<QuizPage> {
                   ),
                 ],
               ),
-            
             SizedBox(height: 20),
-
-            // Show Next Question button only after answering
             if (_answered)
               ElevatedButton(
                 onPressed: _nextQuestion,

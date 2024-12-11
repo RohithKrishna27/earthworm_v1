@@ -1,245 +1,231 @@
-// crop_selection_screen.dart
-import 'package:flutter/material.dart';
-import 'crop_questionnaire.dart';
-import 'crop_schedule.dart';
+// // crop_questionnaire_screen.dart
+// import 'package:flutter/material.dart';
+// import 'package:geolocator/geolocator.dart';
+// import 'crop_schedule.dart';
 
-class CropSelectionScreen extends StatelessWidget {
-  const CropSelectionScreen({Key? key}) : super(key: key);
+// class CropQuestionnaireScreen extends StatefulWidget {
+//   //final String cropName;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.green[50]!,
-              Colors.white,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                expandedHeight: 160,
-                floating: false,
-                pinned: true,
-                elevation: 0,
-                backgroundColor: Colors.green[700],
-                flexibleSpace: FlexibleSpaceBar(
-                  title: const Text(
-                    'Select Your Crop',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                    ),
-                  ),
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                        colors: [
-                          Colors.green[700]!,
-                          Colors.green[500]!,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+//   const CropQuestionnaireScreen({Key? key})
+//       : super(key: key);
 
-              // Categories
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Popular Categories',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 100,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            _buildCategoryCard('Cereals', Icons.grass),
-                            _buildCategoryCard('Pulses', Icons.spa),
-                            _buildCategoryCard(
-                                'Vegetables', Icons.local_florist),
-                            _buildCategoryCard('Oilseeds', Icons.water_drop),
-                            _buildCategoryCard(
-                                'Cash Crops', Icons.monetization_on),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+//   @override
+//   State<CropQuestionnaireScreen> createState() =>
+//       _CropQuestionnaireScreenState();
+// }
 
-              // Crops Grid
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.9,
-                  ),
-                  delegate: SliverChildListDelegate([
-                    _buildCropCard(
-                        context, 'Rice', 'images/rice.png', 'Cereals'),
-                    _buildCropCard(
-                        context, 'Maize', 'images/maize.png', 'Cereals'),
-                    _buildCropCard(
-                        context, 'Mustard', 'images/mustard.png', 'Oilseeds'),
-                    _buildCropCard(
-                        context, 'Tomatoes', 'images/tomato.png', 'Vegetables'),
-                    _buildCropCard(context, 'Ground Nut',
-                        'images/ground_nut.png', 'Oilseeds'),
-                    _buildCropCard(
-                        context, 'Ragi', 'images/ragi.png', 'Cereals'),
-                    _buildCropCard(
-                        context, 'Cotton', 'images/cotton.png', 'Cash Crops'),
-                  ]),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+// class _CropQuestionnaireScreenState extends State<CropQuestionnaireScreen> {
+//   int _currentStep = 0;
+//   final _formKey = GlobalKey<FormState>();
 
-  Widget _buildCategoryCard(String title, IconData icon) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(right: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 90,
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 24, color: Colors.green[700]),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+//   // Form values
+//   String? location;
+//   String? cropType;
+//   bool recommendCrop = false;
+//   String? landSize;
+//   DateTime? plantingDate;
+//   String? irrigationType;
+//   bool _isLoading = false;
 
-  Widget _buildCropCard(
-    BuildContext context,
-    String title,
-    String imagePath,
-    String category,
-  ) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CropQuestionnaireScreen(cropName: title),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.asset(
-                imagePath,
-                height: 110,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 110,
-                    color: Colors.green[50],
-                    child: Icon(Icons.image_not_supported,
-                        color: Colors.green[700]),
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      category,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.green[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   void initState() {
+//     super.initState();
+//     _getCurrentLocation();
+//   }
+
+//   Future<void> _getCurrentLocation() async {
+//     try {
+//       // Check if location services are enabled
+//       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+//       if (!serviceEnabled) {
+//         throw Exception(
+//             'Location services are disabled. Please enable them in settings.');
+//       }
+
+//       // Check and request location permissions
+//       LocationPermission permission = await Geolocator.checkPermission();
+//       if (permission == LocationPermission.denied) {
+//         permission = await Geolocator.requestPermission();
+//         if (permission == LocationPermission.denied) {
+//           throw Exception(
+//               'Location permissions are denied. Grant permissions to continue.');
+//         }
+//       }
+
+//       if (permission == LocationPermission.deniedForever) {
+//         throw Exception(
+//             'Location permissions are permanently denied. Enable them in settings.');
+//       }
+
+//       // Fetch the current location
+//       setState(() => _isLoading = true);
+//       Position position = await Geolocator.getCurrentPosition(
+//         desiredAccuracy: LocationAccuracy.high,
+//         timeLimit: const Duration(seconds: 15),
+//       );
+
+//       // Update location and proceed to next step
+//       setState(() {
+//         location = "Lat: ${position.latitude}, Long: ${position.longitude}";
+//         _isLoading = false;
+//         _currentStep = 1; // Move to next step automatically
+//       });
+//     } catch (e) {
+//       // Log and display user-friendly error messages
+//       print('Error getting location: $e');
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('Error getting location: ${e.toString()}'),
+//           duration: const Duration(seconds: 3),
+//         ),
+//       );
+//       setState(() => _isLoading = false);
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('Farming Plan'),
+//         backgroundColor: Colors.green[700],
+//       ),
+//       body: Form(
+//         key: _formKey,
+//         child: Stepper(
+//           currentStep: _currentStep,
+//           onStepContinue: () {
+//             if (_currentStep < 5) {
+//               setState(() => _currentStep++);
+//             } else {
+//               // Navigate to schedule screen
+//               Navigator.push(
+//                 context,
+//                 MaterialPageRoute(
+//                   builder: (context) => FarmingScheduleScreen(
+//                     cropName: cropType ?? '',
+//                     fieldSize: landSize ?? '',
+//                     plantingDate: plantingDate ?? DateTime.now(),
+//                     //location: location ?? '',
+//                     //farmingType: '', // Placeholder for farming type (not defined in request)
+//                   ),
+//                 ),
+//               );
+//             }
+//           },
+//           onStepCancel: () {
+//             if (_currentStep > 0) {
+//               setState(() => _currentStep--);
+//             }
+//           },
+//           steps: [
+//             Step(
+//               title: const Text('Location'),
+//               content: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   _isLoading
+//                       ? const CircularProgressIndicator()
+//                       : Text(location ?? 'Location not fetched'),
+//                 ],
+//               ),
+//               isActive: _currentStep >= 0,
+//             ),
+//             Step(
+//               title: const Text('Crop Type'),
+//               content: Column(
+//                 children: [
+//                   CheckboxListTile(
+//                     title: const Text('Recommend crop'),
+//                     value: recommendCrop,
+//                     onChanged: (value) {
+//                       setState(() => recommendCrop = value ?? false);
+//                       if (recommendCrop) cropType = null; // Clear input if recommend is selected
+//                     },
+//                   ),
+//                   if (!recommendCrop)
+//                     TextFormField(
+//                       decoration: const InputDecoration(
+//                         labelText: 'Enter crop type',
+//                         border: OutlineInputBorder(),
+//                       ),
+//                       onChanged: (value) => cropType = value,
+//                       validator: (value) => recommendCrop || (value?.isNotEmpty ?? false)
+//                           ? null
+//                           : 'Please enter or recommend a crop type',
+//                     ),
+//                 ],
+//               ),
+//               isActive: _currentStep >= 1,
+//             ),
+//             Step(
+//               title: const Text('Land Size'),
+//               content: TextFormField(
+//                 decoration: const InputDecoration(
+//                   labelText: 'Enter land size in acres',
+//                   border: OutlineInputBorder(),
+//                 ),
+//                 onChanged: (value) => landSize = value,
+//                 validator: (value) =>
+//                     value?.isEmpty ?? true ? 'Please enter land size' : null,
+//               ),
+//               isActive: _currentStep >= 2,
+//             ),
+//             Step(
+//               title: const Text('Planting Date'),
+//               content: InkWell(
+//                 onTap: () async {
+//                   final date = await showDatePicker(
+//                     context: context,
+//                     initialDate: DateTime.now(),
+//                     firstDate: DateTime.now(),
+//                     lastDate: DateTime.now().add(const Duration(days: 365)),
+//                   );
+//                   if (date != null) {
+//                     setState(() => plantingDate = date);
+//                   }
+//                 },
+//                 child: InputDecorator(
+//                   decoration: const InputDecoration(
+//                     border: OutlineInputBorder(),
+//                     labelText: 'Select planting date',
+//                   ),
+//                   child: Text(
+//                     plantingDate != null
+//                         ? '${plantingDate!.day}/${plantingDate!.month}/${plantingDate!.year}'
+//                         : 'Tap to select date',
+//                   ),
+//                 ),
+//               ),
+//               isActive: _currentStep >= 3,
+//             ),
+//             Step(
+//               title: const Text('Irrigation Type'),
+//               content: DropdownButtonFormField<String>(
+//                 decoration: const InputDecoration(
+//                   border: OutlineInputBorder(),
+//                   labelText: 'Select irrigation type',
+//                 ),
+//                 items: [
+//                   'Drip',
+//                   'Sprinkler',
+//                   'Flood',
+//                   'Furrow',
+//                   'Rain-fed'
+//                 ].map((type) => DropdownMenuItem(
+//                       value: type,
+//                       child: Text(type),
+//                     ))
+//                     .toList(),
+//                 onChanged: (value) => setState(() => irrigationType = value),
+//                 validator: (value) =>
+//                     value == null ? 'Please select an irrigation type' : null,
+//               ),
+//               isActive: _currentStep >= 4,
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

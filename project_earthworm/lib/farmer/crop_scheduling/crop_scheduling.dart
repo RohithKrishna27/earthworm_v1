@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'traditional/crop_choice.dart';
 import 'advanced/method_choice.dart';
+import 'traditional/crop_questionnaire.dart';
 
 class CropSchedulingScreen extends StatelessWidget {
   const CropSchedulingScreen({Key? key}) : super(key: key);
@@ -59,7 +59,7 @@ class CropSchedulingScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const CropSelectionScreen(),
+                              builder: (context) => const CropQuestionnaireScreen(),
                             ),
                           );
                         },
