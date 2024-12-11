@@ -50,16 +50,15 @@ class MyApp extends StatelessWidget {
           '/buyer/home': (context) => BuyerMain(),
           '/dashboard': (context) => OnboardingScreen(),
           '/disease-detection': (context) => AdvanceDiseasesDetection(),
-          '/seed-varieties': (context) => CropAnalysisScreen(),
-          '/map-visualization': (context) => UserNameFetcher(),
+          '/seed-varieties' :(context) => CropAnalysisScreen(),
+          '/map-visualization':(context) => UserNameFetcher(),
           '/crop-scheduling': (context) => CropSchedulingScreen(),
           '/crop-assistance': (context) => CropAssistanceScreen(),
           '/sell-crops': (context) => SellingCropHomePage(),
           '/sell-business': (context) =>
               CropDetailsForm(currentUserId: currentUserId),
           '/learn-home': (context) => LearnHome(),
-          '/buyer/browse-crops': (context) => BuyerFeedPage(),
-          '/insurance': (context) => FarmerInsuranceSignup()
+          '/buyer/browse-crops': (context) => BuyerFeedPage()
         },
       ),
     );

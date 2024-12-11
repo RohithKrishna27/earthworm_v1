@@ -46,7 +46,8 @@ class _FarmerHomeState extends State<FarmerHome> {
       'languageLabel': 'ಭಾಷೆಯನ್ನು ಆಯ್ಕೆ ಮಾಡಿ',
       'logout': 'ಬೇರು',
       'learn': 'ಕೃಷಿ ಪದ್ಧತಿಗಳ ಬಗ್ಗೆ ತಿಳಿಯಿರಿ',
-      'gain_knowledge': 'ಕೃಷಿ ಪದ್ಧತಿಗಳ ಬಗ್ಗೆ ಹೆಚ್ಚಿನ ಜ್ಞಾನವನ್ನು ಕಲಿಯಿರಿ ಮತ್ತು ಪಡೆದುಕೊಳ್ಳಿ',
+      'gain_knowledge':
+          'ಕೃಷಿ ಪದ್ಧತಿಗಳ ಬಗ್ಗೆ ಹೆಚ್ಚಿನ ಜ್ಞಾನವನ್ನು ಕಲಿಯಿರಿ ಮತ್ತು ಪಡೆದುಕೊಳ್ಳಿ',
     },
     Language.Hindi: {
       'welcome_back': 'फिर से स्वागत है!',
@@ -60,7 +61,8 @@ class _FarmerHomeState extends State<FarmerHome> {
       'languageLabel': 'भाषा चुनें',
       'logout': 'लॉग आउट',
       'learn': 'कृषि पद्धतियों के बारे में जानें',
-      'gain_knowledge': 'कृषि पद्धतियों के बारे में जानें और अधिक जानकारी प्राप्त करें',
+      'gain_knowledge':
+          'कृषि पद्धतियों के बारे में जानें और अधिक जानकारी प्राप्त करें',
     },
   };
 
@@ -253,15 +255,6 @@ class HomeScreen extends StatelessWidget {
                 localizedStrings['gain_knowledge']!,
                 Icons.eco,
                 '/learn-home',
-                Color.fromARGB(255, 1, 96, 6), // Darkest green
-                boxWidth,
-              ),
-              _buildLargeFeatureBox(
-                context,
-                localizedStrings['learn']!,
-                localizedStrings['gain_knowledge']!,
-                Icons.eco,
-                '/insurance',
                 Color.fromARGB(255, 1, 96, 6), // Darkest green
                 boxWidth,
               ),

@@ -146,7 +146,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Position? _currentPosition;
   bool _isLoading = false;
   final FirebaseService _firebaseService = FirebaseService();
-  
 
   final List<String> _farmingMethods = [
     'Organic Farming',
@@ -706,100 +705,100 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
     }
   }
 
-  Widget _buildMapSection() {
-    if (_currentPosition == null) {
-      return Card(
-        child: Container(
-          height: 300,
-          padding: const EdgeInsets.all(16.0),
-          child: const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Accessing location...'),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+  // Widget _buildMapSection() {
+  //   if (_currentPosition == null) {
+  //     return Card(
+  //       child: Container(
+  //         height: 300,
+  //         padding: const EdgeInsets.all(16.0),
+  //         child: const Center(
+  //           child: Column(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: [
+  //               CircularProgressIndicator(),
+  //               SizedBox(height: 16),
+  //               Text('Accessing location...'),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     );
+  //   }
 
-    return SizedBox(
-      height: 300,
-      child: Card(
-        elevation: 4,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Farm Location & Weather Zones\nತೋಟ ಸ್ಥಳ ಮತ್ತು ಹವಾಮಾನ ವಲಯಗಳು',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.my_location),
-                    onPressed: () {
-                      _getCurrentLocation();
-                      _updateFarmingZones();
-                    },
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(
-                    _currentPosition!.latitude,
-                    _currentPosition!.longitude,
-                  ),
-                  zoom: 15,
-                ),
-                markers: {
-                  Marker(
-                    markerId: const MarkerId('farm_location'),
-                    position: LatLng(
-                      _currentPosition!.latitude,
-                      _currentPosition!.longitude,
-                    ),
-                    infoWindow: InfoWindow(
-                      title: 'Your Farm',
-                      snippet:
-                          'Temp: ${_weatherData?['current']['temp_c'].toStringAsFixed(1)}°C',
-                    ),
-                  ),
-                },
-                circles: _farmingZones,
-                onMapCreated: (controller) {
-                  _mapController = controller;
-                  _updateFarmingZones();
-                },
-                myLocationEnabled: true,
-                myLocationButtonEnabled: true,
-                mapType: MapType.hybrid,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildZoneLegend('Optimal', Colors.green),
-                  _buildZoneLegend('Moderate', Colors.yellow),
-                  _buildZoneLegend('Risk', Colors.red),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  //   return SizedBox(
+  //     height: 300,
+  //     child: Card(
+  //       elevation: 4,
+  //       child: Column(
+  //         children: [
+  //           Padding(
+  //             padding: const EdgeInsets.all(8.0),
+  //             child: Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //               children: [
+  //                 Text(
+  //                   'Farm Location & Weather Zones\nತೋಟ ಸ್ಥಳ ಮತ್ತು ಹವಾಮಾನ ವಲಯಗಳು',
+  //                   style: Theme.of(context).textTheme.titleMedium,
+  //                 ),
+  //                 IconButton(
+  //                   icon: const Icon(Icons.my_location),
+  //                   onPressed: () {
+  //                     _getCurrentLocation();
+  //                     _updateFarmingZones();
+  //                   },
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //           Expanded(
+  //             child: GoogleMap(
+  //               initialCameraPosition: CameraPosition(
+  //                 target: LatLng(
+  //                   _currentPosition!.latitude,
+  //                   _currentPosition!.longitude,
+  //                 ),
+  //                 zoom: 15,
+  //               ),
+  //               markers: {
+  //                 Marker(
+  //                   markerId: const MarkerId('farm_location'),
+  //                   position: LatLng(
+  //                     _currentPosition!.latitude,
+  //                     _currentPosition!.longitude,
+  //                   ),
+  //                   infoWindow: InfoWindow(
+  //                     title: 'Your Farm',
+  //                     snippet:
+  //                         'Temp: ${_weatherData?['current']['temp_c'].toStringAsFixed(1)}°C',
+  //                   ),
+  //                 ),
+  //               },
+  //               circles: _farmingZones,
+  //               onMapCreated: (controller) {
+  //                 _mapController = controller;
+  //                 _updateFarmingZones();
+  //               },
+  //               myLocationEnabled: true,
+  //               myLocationButtonEnabled: true,
+  //               mapType: MapType.hybrid,
+  //             ),
+  //           ),
+  //           Padding(
+  //             padding: const EdgeInsets.all(8.0),
+  //             child: Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //               children: [
+  //                 _buildZoneLegend('Optimal', Colors.green),
+  //                 _buildZoneLegend('Moderate', Colors.yellow),
+  //                 _buildZoneLegend('Risk', Colors.red),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Future<void> _fetchWeatherData() async {
     if (_currentPosition == null) return;
@@ -1534,8 +1533,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                   children: [
                     _buildFarmerDetails(),
                     _buildWeatherSection(),
-                    const SizedBox(height: 16),
-                    _buildMapSection(),
+             
                     const SizedBox(height: 16),
                     _buildMarketTrends(),
                     const SizedBox(height: 16),
