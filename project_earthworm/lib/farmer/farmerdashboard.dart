@@ -146,6 +146,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Position? _currentPosition;
   bool _isLoading = false;
   final FirebaseService _firebaseService = FirebaseService();
+  
 
   final List<String> _farmingMethods = [
     'Organic Farming',
@@ -982,7 +983,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
 
   Future<void> _fetchMarketData() async {
     final String primaryBaseUrl =
-        "https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070";
+        "https://api.data.gov.in/resource/9ef84268--a864a43d0070";
     final String primaryApiKey =
         "579b464db66ec23bdd000001e3c6f8ed17cb4769425e0176dc5b7318";
     final String backupBaseUrl =
@@ -1032,7 +1033,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
 
   Future<void> _fetchBackupApiData() async {
     final String backupBaseUrl =
-        "https://market-api-m222.onrender.com/api/commodities/state/Maharashtra";
+        "https://market-api-m222.onrender.com/api/commodities/state/Maharashtra/district/sangli/";
 
     try {
       // Call the backup API

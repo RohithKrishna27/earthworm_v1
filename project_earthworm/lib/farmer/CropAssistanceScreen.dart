@@ -105,15 +105,6 @@ class _CropAssistanceScreenState extends State<CropAssistanceScreen> {
               ),
               _buildLargeFeatureBox(
                 context,
-                _localizedStrings[_selectedLanguage]!['title3']!,
-                _localizedStrings[_selectedLanguage]!['subtitle3']!,
-                Icons.map,
-                '/map-visualization',
-                Color(0xFF2E7D32),
-                boxWidth,
-              ),
-              _buildLargeFeatureBox(
-                context,
                 _localizedStrings[_selectedLanguage]!['title4']!,
                 _localizedStrings[_selectedLanguage]!['subtitle4']!,
                 Icons.schedule,
