@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'buyer_bidding_page.dart';
+import 'auction_detail_page.dart';
 
 class BuyerAuctionsPage extends StatefulWidget {
   const BuyerAuctionsPage({Key? key}) : super(key: key);
@@ -177,189 +178,198 @@ class _BuyerAuctionsPageState extends State<BuyerAuctionsPage> {
                       final currentBid = auction['currentBid'];
                       final qualityScore = auction['qualityScore'];
 
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Container(
-                              height: 160,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(16)),
-                                image: DecorationImage(
-                                  image: NetworkImage(cropDetails['imageUrl'] ??
-                                      'https://via.placeholder.com/400x200'),
-                                  fit: BoxFit.cover,
+                      return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AuctionDetailPage(
+                                  auctionId: auctions[index].id,
+                                  currentBid: currentBid,
+                                  auctionData: auction,
                                 ),
                               ),
-                              child: Stack(
-                                children: [
-                                  Positioned(
-                                    top: 16,
-                                    right: 16,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black54,
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.timer,
-                                              size: 16, color: Colors.white),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            _formatDuration(remainingTime),
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        ],
-                                      ),
+                            );
+                          },
+                          child: Container(
+                            margin: EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  height: 160,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(16)),
+                                    image: DecorationImage(
+                                      image: NetworkImage(auction['imageUrls']
+                                              ?[0] ??
+                                          'https://via.placeholder.com/400x200'),
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                  child: Stack(
                                     children: [
-                                      Text(
-                                        cropDetails['type'],
-                                        style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      if (qualityScore != null)
-                                        Container(
+                                      Positioned(
+                                        top: 16,
+                                        right: 16,
+                                        child: Container(
                                           padding: EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
+                                              horizontal: 12, vertical: 6),
                                           decoration: BoxDecoration(
-                                            color: Colors.orange[50],
+                                            color: Colors.black54,
                                             borderRadius:
-                                                BorderRadius.circular(12),
+                                                BorderRadius.circular(20),
                                           ),
                                           child: Row(
+                                            mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(Icons.star,
+                                              Icon(Icons.timer,
                                                   size: 16,
-                                                  color: Colors.orange),
+                                                  color: Colors.white),
                                               SizedBox(width: 4),
                                               Text(
-                                                qualityScore.toStringAsFixed(1),
+                                                _formatDuration(remainingTime),
                                                 style: TextStyle(
-                                                  color: Colors.orange[700],
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                                    color: Colors.white),
                                               ),
                                             ],
                                           ),
                                         ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _buildInfoCard(
-                                          'Quantity',
-                                          '${cropDetails['quantity']} quintals',
-                                          Icons.scale,
-                                        ),
-                                      ),
-                                      SizedBox(width: 8),
-                                      Expanded(
-                                        child: _buildInfoCard(
-                                          'Base Price',
-                                          '₹${NumberFormat('#,##,###').format(cropDetails['basePrice'])}',
-                                          Icons.currency_rupee,
-                                        ),
                                       ),
                                     ],
                                   ),
-                                  SizedBox(height: 16),
-                                  Row(
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Current Bid',
-                                              style: TextStyle(
-                                                color: Colors.grey[600],
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            cropDetails['type'],
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          if (qualityScore != null)
+                                            Container(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.orange[50],
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.star,
+                                                      size: 16,
+                                                      color: Colors.orange),
+                                                  SizedBox(width: 4),
+                                                  Text(
+                                                    qualityScore
+                                                        .toStringAsFixed(1),
+                                                    style: TextStyle(
+                                                      color: Colors.orange[700],
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            Text(
-                                              '₹${NumberFormat('#,##,###').format(currentBid)}',
+                                        ],
+                                      ),
+                                      SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: _buildInfoCard(
+                                              'Quantity',
+                                              '${cropDetails['quantity']} quintals',
+                                              Icons.scale,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Expanded(
+                                            child: _buildInfoCard(
+                                              'Base Price',
+                                              '₹${NumberFormat('#,##,###').format(cropDetails['basePrice'])}',
+                                              Icons.currency_rupee,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(height: 16),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Current Bid',
+                                                  style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '₹${NumberFormat('#,##,###').format(currentBid)}',
+                                                  style: TextStyle(
+                                                    fontSize: 24,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.green[700],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      BuyerBiddingPage(
+                                                    auctionId:
+                                                        auctions[index].id,
+                                                    currentBid: currentBid,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.green,
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 24, vertical: 12),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'Place Bid',
                                               style: TextStyle(
-                                                fontSize: 24,
+                                                fontSize: 16,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.green[700],
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  BuyerBiddingPage(
-                                                auctionId: auctions[index].id,
-                                                currentBid: currentBid,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.green,
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 24, vertical: 12),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12),
                                           ),
-                                        ),
-                                        child: Text(
-                                          'Place Bid',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      );
+                          ));
                     },
                     childCount: auctions.length,
                   ),
