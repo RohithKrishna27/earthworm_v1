@@ -590,7 +590,7 @@ class FarmerAuctionStatusPage extends StatelessWidget {
           StreamBuilder<DocumentSnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('buyers')
-                .doc(currentBidder['uid'])
+                .doc(currentBidder['id'])
                 .snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
