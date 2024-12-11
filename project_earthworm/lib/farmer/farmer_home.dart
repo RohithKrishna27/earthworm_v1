@@ -86,7 +86,6 @@ class _FarmerHomeState extends State<FarmerHome> {
     final List<Widget> _pages = [
       HomeScreen(localizedStrings: _localizedStrings[_selectedLanguage]!),
       CalculatorHomeScreen(),
-      OnboardingScreen(),
     ];
 
     return Scaffold(
