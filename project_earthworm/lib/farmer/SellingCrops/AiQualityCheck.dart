@@ -507,7 +507,8 @@ class ResultsPage extends StatelessWidget {
                       'Overall Quality Score',
                       style: TextStyle(
                         fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontWeight:
+                       FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -592,7 +593,41 @@ class ResultsPage extends StatelessWidget {
                 ),
               ),
             ),
-
+        // Recommended Price Card
+        Card(
+          margin: const EdgeInsets.all(16),
+          elevation: 4,
+          child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+            const Text(
+              'Recommended Price',
+              style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+         
+            Text(
+              'Based on the analysis, the recommended price for your crop is:( formula used : rating * 10% of max price * scaling factor(1.05))',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Text(
+               ((formData['cropDetails']['marketPrice']['max'] as double) *((averages['Overall_Quality'] as double)/10 )* 1.05).toStringAsFixed(2),
+              style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.green,
+              ),
+            ),
+            ],
+          ),
+          ),
+        ),
             // Action Buttons
             Padding(
               padding: const EdgeInsets.all(16),

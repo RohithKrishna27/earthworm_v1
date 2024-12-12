@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_earthworm/farmer/SellingCrops/IntailCropdetails.dart';
 import 'former_auction_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:project_earthworm/rise.dart';
 // Color scheme constants for better organization
 class AppColors {
   static const Color primaryBlue = Color(0xFF1E88E5);
@@ -541,63 +541,64 @@ class HomeScreen extends StatelessWidget {
               SizedBox(height: 24),
               // Welcome Header
               Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primaryColor.withOpacity(0.1),
-                      spreadRadius: 2,
-                      blurRadius: 10,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                BoxShadow(
+                  color: primaryColor.withOpacity(0.1),
+                  spreadRadius: 2,
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      localizedStrings['welcome_message']!,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: secondaryColor,
-                      ),
-                    ),
-                  ],
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                Text(
+                  localizedStrings['welcome_message']!,
+                  style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: secondaryColor,
+                  ),
                 ),
+                ],
+              ),
               ),
               SizedBox(height: 32),
 
               // Feature Boxes
               _buildLargeFeatureBox(
-                context,
-                localizedStrings['sell_your_crop_directly']!,
-                localizedStrings['join_marketplace']!,
-                Icons.business,
-                '/sell-business',
-                primaryColor,
-                boxWidth,
+              context,
+              localizedStrings['sell_your_crop_directly']!,
+              localizedStrings['join_marketplace']!,
+              Icons.business,
+              '/sell-business',
+              primaryColor,
+              boxWidth,
               ),
               _buildLargeFeatureBox(
-                context,
-                'AgriLoop',
-                localizedStrings['join_marketplace']!,
-                Icons.shopping_cart,
-                '/agriloop',
-                const Color.fromARGB(255, 6, 77, 158),
-                boxWidth,
+              context,
+              'AgriLoop',
+              localizedStrings['join_marketplace']!,
+              Icons.shopping_cart,
+              '/agriloop',
+              const Color.fromARGB(255, 6, 77, 158),
+              boxWidth,
               ),
               _buildLargeFeatureBox(
-                context,
-                'Earthworm Rise Program',
-                localizedStrings['build_your_brand']!,
-                Icons.branding_watermark,
-                '/earthworm-rise',
-                const Color.fromARGB(255, 5, 85, 151),
-                boxWidth,
+              context,
+              'Earthworm Rise Program',
+              localizedStrings['build_your_brand']!,
+              Icons.branding_watermark,
+              '/earthworm-rise',
+              const Color.fromARGB(255, 5, 85, 151),
+              boxWidth,
               ),
+             
             ],
           ),
         ),
@@ -696,6 +697,8 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => AgriLoopScreen());
       case '/earthworm-rise':
         return MaterialPageRoute(builder: (_) => EarthwormRiseScreen());
+      
+
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(body: Center(child: Text('Page not found'))),
