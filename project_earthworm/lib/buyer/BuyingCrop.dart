@@ -77,9 +77,6 @@ class CropCard extends StatelessWidget {
     final isBelowMSP = data['mspDetails'] != null &&
         data['mspDetails']['mspDifference'] != null &&
         data['mspDetails']['mspDifference'] < 0;
-    final isBelowMSP = data['mspDetails'] != null &&
-        data['mspDetails']['mspDifference'] != null &&
-        data['mspDetails']['mspDifference'] < 0;
 
     return Card(
       elevation: 4,
