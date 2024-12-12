@@ -90,7 +90,8 @@ class _FarmerHomeState extends State<FarmerHome> {
     final List<Widget> _pages = [
       HomeScreen(localizedStrings: _localizedStrings[_selectedLanguage]!),
       CalculatorHomeScreen(),
-      ChatScreen(),
+      const ChatbotWebView(
+          chatbotUrl: "https://effulgent-semifreddo-39d899.netlify.app/"),
     ];
 
     return Scaffold(
