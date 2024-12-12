@@ -77,6 +77,9 @@ class CropCard extends StatelessWidget {
     final isBelowMSP = data['mspDetails'] != null &&
         data['mspDetails']['mspDifference'] != null &&
         data['mspDetails']['mspDifference'] < 0;
+    final isBelowMSP = data['mspDetails'] != null &&
+        data['mspDetails']['mspDifference'] != null &&
+        data['mspDetails']['mspDifference'] < 0;
 
     return Card(
       elevation: 4,
@@ -370,7 +373,6 @@ class _DetailedCropViewState extends State<DetailedCropView> {
     final isBelowMSP = widget.data['mspDetails'] != null &&
         widget.data['mspDetails']['mspDifference'] != null &&
         widget.data['mspDetails']['mspDifference'] < 0;
-
     final mspPrice = widget.data['mspDetails'] != null &&
             widget.data['mspDetails']['mspPrice'] != null
         ? widget.data['mspDetails']['mspPrice']
@@ -841,9 +843,10 @@ class _DetailedCropViewState extends State<DetailedCropView> {
         builder: (context) => PaymentPage(
           amount: amount,
           isSupport: isSupport,
-          cropName: widget.data['cropType'] ?? 'Unknown Crop',
-          farmerName: widget.data['farmerName'] ?? 'Unknown Farmer',
-          farmerPhone: widget.data['farmerPhone'] ?? '',
+          cropName: widget.data['cropType'] ?? 'Unknown Crop', // Crop name
+          farmerName:
+              widget.data['farmerName'] ?? 'Unknown Farmer', // Farmer name
+          farmerPhone: widget.data['farmerPhone'] ?? '', // Farmer phone number
         ),
       ),
     );

@@ -117,8 +117,27 @@ class _BuyerBiddingPageState extends State<BuyerBiddingPage>
       }
 
       final newBid = double.parse(_bidController.text);
-      if (newBid <= widget.currentBid) {
-        _showErrorSnackBar('Bid must be higher than current bid');
+      final auctionDoc = await FirebaseFirestore.instance
+          .collection('auctions')
+          .doc(widget.auctionId)
+          .get();
+
+      final auctionData = auctionDoc.data() as Map<String, dynamic>;
+      final currentBid = auctionData['currentBid'] as double;
+
+      // Add minimum bid increment (e.g., 1% of current bid)
+      final minimumBidIncrement = currentBid * 0.02; // 1% increment
+      final minimumNextBid = currentBid + minimumBidIncrement;
+
+      if (newBid <= currentBid) {
+        _showErrorSnackBar(
+            'Bid must be higher than current bid: ₹${NumberFormat('#,##,###').format(currentBid)}');
+        return;
+      }
+
+      if (newBid < minimumNextBid) {
+        _showErrorSnackBar(
+            'Minimum bid should be ₹${NumberFormat('#,##,###').format(minimumNextBid)}');
         return;
       }
 
@@ -142,12 +161,7 @@ class _BuyerBiddingPageState extends State<BuyerBiddingPage>
       final buyerData = buyerDoc.data()!;
 
       // Get auction data to check if it's still active
-      final auctionDoc = await FirebaseFirestore.instance
-          .collection('auctions')
-          .doc(widget.auctionId)
-          .get();
 
-      final auctionData = auctionDoc.data() as Map<String, dynamic>;
       final endTime = (auctionData['endTime'] as Timestamp).toDate();
 
       if (DateTime.now().isAfter(endTime)) {
