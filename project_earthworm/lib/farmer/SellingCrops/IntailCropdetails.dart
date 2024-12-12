@@ -596,24 +596,95 @@ final textFieldDecoration = InputDecoration(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            // Header with MSP Info Button
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.grass, color: Colors.green[700]),
-                const SizedBox(width: 8),
-                const Text(
-                  'Crop Information',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.grass, color: Colors.green[700]),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Crop Information',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: Icon(Icons.info_outline, color: Colors.green[700]),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Row(
+                            children: [
+                              Icon(Icons.agriculture, color: Colors.green[700]),
+                              const SizedBox(width: 8),
+                              const Text('What is MSP?'),
+                            ],
+                          ),
+                          content: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Minimum Support Price (MSP) is a form of market intervention by the Government of India to insure agricultural producers against any sharp fall in farm prices.',
+                                  style: TextStyle(color: Colors.grey[800]),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Benefits of MSP:',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green[700],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                ...['Guaranteed minimum price for your crops',
+                                   'Protection against market price fluctuations',
+                                   'Ensures fair compensation for farmers',
+                                   'Promotes food security'
+                                ].map((benefit) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.check_circle, 
+                                           color: Colors.green[600],
+                                           size: 16),
+                                      const SizedBox(width: 8),
+                                      Expanded(child: Text(benefit)),
+                                    ],
+                                  ),
+                                )).toList(),
+                              ],
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              child: const Text('Close'),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
+
             // Crop Selection
-            DropdownButtonFormField<String>(
+           DropdownButtonFormField<String>(
               value: selectedCrop,
               decoration: textFieldDecoration.copyWith(
                 labelText: 'Select Crop Type',
@@ -641,6 +712,46 @@ final textFieldDecoration = InputDecoration(
                 return null;
               },
             ),
+
+            // MSP Display
+            if (selectedCrop != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.price_check, color: Colors.blue[700]),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Minimum Support Price (MSP)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          '₹${mspPrices[selectedCrop]?.toStringAsFixed(2)}/quintal',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Rest of the existing widget code remains the same...
             const SizedBox(height: 16),
 
             // Market Price Display
@@ -757,17 +868,10 @@ final textFieldDecoration = InputDecoration(
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Per Quintal',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
                   ],
                 ),
               ),
+
 
             const SizedBox(height: 16),
 

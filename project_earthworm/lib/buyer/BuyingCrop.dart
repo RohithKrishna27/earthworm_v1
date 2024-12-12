@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:project_earthworm/buyer/paymentGateway.dart';
@@ -73,9 +74,9 @@ class CropCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat("#,##,###");
-    final isBelowMSP = data['mspDetails'] != null && 
-                       data['mspDetails']['mspDifference'] != null && 
-                       data['mspDetails']['mspDifference'] < 0;
+    final isBelowMSP = data['mspDetails'] != null &&
+        data['mspDetails']['mspDifference'] != null &&
+        data['mspDetails']['mspDifference'] < 0;
 
     return Card(
       elevation: 4,
@@ -86,11 +87,11 @@ class CropCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Main Image with Quality Badge
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
                   child: Image.network(
                     data['imageUrls'][0],
                     height: 200,
@@ -102,14 +103,16 @@ class CropCard extends StatelessWidget {
                   top: 12,
                   right: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(0.9),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.analytics, color: Colors.white, size: 16),
+                        const Icon(Icons.analytics,
+                            color: Colors.white, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           'AI Score: ${data['qualityScore']?.toStringAsFixed(1) ?? 'N/A'}/10',
@@ -124,14 +127,11 @@ class CropCard extends StatelessWidget {
                 ),
               ],
             ),
-
-            // Content
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Crop Info
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -153,8 +153,6 @@ class CropCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-
-                  // Farmer Info
                   Row(
                     children: [
                       const Icon(Icons.person, size: 16, color: Colors.grey),
@@ -168,7 +166,8 @@ class CropCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                      const Icon(Icons.location_on,
+                          size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
                         '${data['location']?['district'] ?? 'Unknown District'}, ${data['location']?['state'] ?? 'Unknown State'}',
@@ -187,8 +186,20 @@ class CropCard extends StatelessWidget {
                       ),
                     ],
                   ),
-
-                  // MSP Notice if applicable
+                  // Display crop rating if available
+                  if (data['rating'] != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, size: 16, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${data['rating'].toStringAsFixed(1)} / 5',
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ],
                   if (isBelowMSP)
                     Container(
                       margin: const EdgeInsets.only(top: 12),
@@ -200,7 +211,8 @@ class CropCard extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.favorite, color: Colors.orange[700], size: 20),
+                          Icon(Icons.favorite,
+                              color: Colors.orange[700], size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -214,8 +226,6 @@ class CropCard extends StatelessWidget {
                         ],
                       ),
                     ),
-
-                  // Action Buttons
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Row(
@@ -231,7 +241,8 @@ class CropCard extends StatelessWidget {
                           icon: Icons.message,
                           label: 'Message',
                           color: Colors.blue,
-                          onTap: () => _launchMessage(data['farmerPhone'] ?? ''),
+                          onTap: () =>
+                              _launchMessage(data['farmerPhone'] ?? ''),
                         ),
                         _ActionButton(
                           icon: Icons.info_outline,
@@ -256,7 +267,10 @@ class CropCard extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DetailedCropView(data: data),
+      builder: (context) => DetailedCropView(
+        data: data,
+        docId: docId,
+      ),
     );
   }
 
@@ -309,8 +323,13 @@ class _ActionButton extends StatelessWidget {
 
 class DetailedCropView extends StatefulWidget {
   final Map<String, dynamic> data;
+  final String docId;
 
-  const DetailedCropView({Key? key, required this.data}) : super(key: key);
+  const DetailedCropView({
+    Key? key,
+    required this.data,
+    required this.docId,
+  }) : super(key: key);
 
   @override
   _DetailedCropViewState createState() => _DetailedCropViewState();
@@ -319,16 +338,43 @@ class DetailedCropView extends StatefulWidget {
 class _DetailedCropViewState extends State<DetailedCropView> {
   int _currentImageIndex = 0;
   final _formatter = NumberFormat("#,##,###");
+  String? farmerId;
+  double cropRating = 0; // Store crop rating
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFarmerIdAndRating();
+  }
+
+  Future<void> _fetchFarmerIdAndRating() async {
+    try {
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('crop_sales')
+          .doc(widget.docId)
+          .get();
+
+      if (docSnapshot.exists) {
+        setState(() {
+          farmerId = docSnapshot.data()?['userId'];
+          cropRating = docSnapshot.data()?['qualityScore']?.toDouble() ?? 0;
+        });
+      }
+    } catch (e) {
+      print('Error fetching farmer ID and rating: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isBelowMSP = widget.data['mspDetails'] != null && 
-                       widget.data['mspDetails']['mspDifference'] != null && 
-                       widget.data['mspDetails']['mspDifference'] < 0;
-    final mspPrice = widget.data['mspDetails'] != null && 
-                     widget.data['mspDetails']['mspPrice'] != null 
-                     ? widget.data['mspDetails']['mspPrice'] 
-                     : null;
+    final isBelowMSP = widget.data['mspDetails'] != null &&
+        widget.data['mspDetails']['mspDifference'] != null &&
+        widget.data['mspDetails']['mspDifference'] < 0;
+
+    final mspPrice = widget.data['mspDetails'] != null &&
+            widget.data['mspDetails']['mspPrice'] != null
+        ? widget.data['mspDetails']['mspPrice']
+        : null;
     final listedPrice = widget.data['expectedPrice'] ?? 0;
     final quantity = widget.data['quantity'] ?? 0;
 
@@ -345,7 +391,6 @@ class _DetailedCropViewState extends State<DetailedCropView> {
           controller: scrollController,
           padding: const EdgeInsets.all(16),
           children: [
-            // Image Carousel
             CarouselSlider(
               options: CarouselOptions(
                 height: 300,
@@ -354,7 +399,8 @@ class _DetailedCropViewState extends State<DetailedCropView> {
                   setState(() => _currentImageIndex = index);
                 },
               ),
-              items: List<String>.from(widget.data['imageUrls'] ?? []).map((url) {
+              items:
+                  List<String>.from(widget.data['imageUrls'] ?? []).map((url) {
                 return Builder(
                   builder: (BuildContext context) {
                     return ClipRRect(
@@ -366,29 +412,49 @@ class _DetailedCropViewState extends State<DetailedCropView> {
               }).toList(),
             ),
             const SizedBox(height: 8),
-            // Image indicators
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: widget.data['imageUrls']?.asMap().entries.map<Widget>((entry) {
-                return Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentImageIndex == entry.key
-                        ? Colors.green
-                        : Colors.grey.shade300,
-                  ),
-                );
-              }).toList() ?? [],
+              children: widget.data['imageUrls']
+                      ?.asMap()
+                      .entries
+                      .map<Widget>((entry) {
+                    return Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentImageIndex == entry.key
+                            ? Colors.green
+                            : Colors.grey.shade300,
+                      ),
+                    );
+                  }).toList() ??
+                  [],
             ),
             const SizedBox(height: 24),
-
-            // Basic Info
-            Text(
-              widget.data['cropType'] ?? 'Unknown Crop',
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.data['cropType'] ?? 'Unknown Crop',
+                  style: const TextStyle(
+                      fontSize: 28, fontWeight: FontWeight.bold),
+                ),
+                if (cropRating > 0)
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber),
+                      Text(
+                        '${cropRating.toStringAsFixed(1)}/5',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -396,12 +462,8 @@ class _DetailedCropViewState extends State<DetailedCropView> {
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
-
-            // Quality Score
             _buildQualitySection(),
             const SizedBox(height: 24),
-
-            // Location & Quantity
             _buildInfoCard(
               title: 'Pick-up Location',
               content: '${widget.data['address'] ?? 'Unknown Location'}',
@@ -414,8 +476,6 @@ class _DetailedCropViewState extends State<DetailedCropView> {
               icon: Icons.scale,
             ),
             const SizedBox(height: 24),
-
-            // Description
             if (widget.data['description'] != null) ...[
               const Text(
                 'Description',
@@ -425,18 +485,18 @@ class _DetailedCropViewState extends State<DetailedCropView> {
               Text(widget.data['description'] ?? 'No description available'),
               const SizedBox(height: 24),
             ],
-
-            // Purchase Options
             if (isBelowMSP) ...[
               _buildPurchaseButton(
-                label: 'Support Farmer - Buy at MSP (₹${_formatter.format(mspPrice ?? 0)})',
+                label:
+                    'Support Farmer - Buy at MSP (₹${_formatter.format(mspPrice ?? 0)})',
                 totalAmount: (mspPrice ?? 0) * quantity,
                 color: const Color.fromARGB(255, 157, 247, 175),
                 isSupport: true,
               ),
               const SizedBox(height: 12),
               _buildPurchaseButton(
-                label: 'Buy at Listed Price (₹${_formatter.format(listedPrice)})',
+                label:
+                    'Buy at Listed Price (₹${_formatter.format(listedPrice)})',
                 totalAmount: listedPrice * quantity,
                 color: const Color.fromARGB(255, 190, 187, 85),
                 isSupport: false,
@@ -456,9 +516,9 @@ class _DetailedCropViewState extends State<DetailedCropView> {
 
   Widget _buildQualitySection() {
     final qualityScore = widget.data['qualityScore'] ?? 0;
-    final analysisResults = widget.data['analysisDetails'] != null 
-      ? widget.data['analysisDetails']['results'] as Map<String, dynamic>? 
-      : null;
+    final analysisResults = widget.data['analysisDetails'] != null
+        ? widget.data['analysisDetails']['results'] as Map<String, dynamic>?
+        : null;
 
     return Card(
       elevation: 2,
@@ -498,6 +558,33 @@ class _DetailedCropViewState extends State<DetailedCropView> {
                 ),
               ],
             ),
+            if (cropRating > 0) ...[
+              const SizedBox(height: 16),
+              const Text(
+                'User Ratings',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ...List.generate(5, (index) {
+                    return Icon(
+                      index < cropRating ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 24,
+                    );
+                  }),
+                  const SizedBox(width: 8),
+                  Text(
+                    '(${cropRating.toStringAsFixed(1)})',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 16),
             if (analysisResults != null)
               ...analysisResults.entries
@@ -514,7 +601,8 @@ class _DetailedCropViewState extends State<DetailedCropView> {
                               ),
                               Text(
                                 '${e.value.toStringAsFixed(1)}/10',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -544,9 +632,11 @@ class _DetailedCropViewState extends State<DetailedCropView> {
   }
 
   String _getQualityDescription(double score) {
-    if (score >= 8) return 'Excellent quality crop with superior characteristics';
+    if (score >= 8)
+      return 'Excellent quality crop with superior characteristics';
     if (score >= 7) return 'Very good quality crop meeting high standards';
-    if (score >= 6) return 'Good quality crop with satisfactory characteristics';
+    if (score >= 6)
+      return 'Good quality crop with satisfactory characteristics';
     if (score >= 5) return 'Average quality crop with some variations';
     return 'Below average quality with room for improvement';
   }
@@ -624,24 +714,50 @@ class _DetailedCropViewState extends State<DetailedCropView> {
     required double totalAmount,
     required bool isSupport,
   }) {
+    double userRating =
+        double.parse(_getQualityDescription(widget.data['qualityScore'] ?? 0)); // Store user's rating
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(isSupport ? 'Support Purchase' : 'Purchase Confirmation'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (isSupport)
-              const Text(
-                'Thank you for choosing to support the farmer by purchasing at MSP rate.',
-                style: TextStyle(color: Colors.green),
-              ),
-            const SizedBox(height: 16),
-            Text('Total Amount: ₹${_formatter.format(totalAmount)}'),
-            const SizedBox(height: 8),
-            const Text('Would you like to proceed with the purchase?'),
-          ],
+        content: StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isSupport)
+                  const Text(
+                    'Thank you for choosing to support the farmer by purchasing at MSP rate.',
+                    style: TextStyle(color: Colors.green),
+                  ),
+                const SizedBox(height: 16),
+                Text('Total Amount: ₹${_formatter.format(totalAmount)}'),
+                const SizedBox(height: 16),
+                const Text('Rate this product:'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (index) {
+                    return IconButton(
+                      icon: Icon(
+                        index < userRating ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 30,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          userRating = index + 1;
+                        });
+                      },
+                    );
+                  }),
+                ),
+                const SizedBox(height: 8),
+                const Text('Would you like to proceed with the purchase?'),
+              ],
+            );
+          },
         ),
         actions: [
           TextButton(
@@ -649,9 +765,33 @@ class _DetailedCropViewState extends State<DetailedCropView> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
               _proceedToPayment(totalAmount, isSupport);
+
+              // Update crop_sales rating
+              await _updateCropRating(userRating);
+
+              // Add to order_history with rating
+              FirebaseFirestore.instance.collection('order_history').add({
+                'totalAmount': totalAmount,
+                'buyerId':
+                    FirebaseAuth.instance.currentUser?.uid ?? 'unknown_buyer',
+                'sellerId': farmerId ?? 'unknown_seller',
+                'cropId': widget.docId,
+                'rating': cropRating,
+                'timestamp': FieldValue.serverTimestamp(),
+                'cropType': widget.data['cropType'],
+                'quantity': widget.data['quantity'],
+                'status': 'pending',
+                'supportPrice': isSupport,
+                'ratingDetails': {
+                  'ratedAt': FieldValue.serverTimestamp(),
+                  'stars': userRating,
+                  'buyerName': FirebaseAuth.instance.currentUser?.displayName ??
+                      'Anonymous',
+                }
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
@@ -663,17 +803,47 @@ class _DetailedCropViewState extends State<DetailedCropView> {
     );
   }
 
+  Future<void> _updateCropRating(double newRating) async {
+    try {
+      // Get the current crop document
+      final cropDoc = await FirebaseFirestore.instance
+          .collection('crop_sales')
+          .doc(widget.docId)
+          .get();
+
+      if (cropDoc.exists) {
+        // Get current rating and rating count
+        final currentRating = cropDoc.data()?['rating'] ?? 0.0;
+        final ratingCount = cropDoc.data()?['ratingCount'] ?? 0;
+
+        // Calculate new average rating
+        final double updatedRating =
+            (currentRating * ratingCount + newRating) / (ratingCount + 1);
+
+        // Update the crop_sales document
+        await FirebaseFirestore.instance
+            .collection('crop_sales')
+            .doc(widget.docId)
+            .update({
+          'rating': updatedRating,
+          'ratingCount': ratingCount + 1,
+        });
+      }
+    } catch (e) {
+      print('Error updating crop rating: $e');
+    }
+  }
+
   void _proceedToPayment(double amount, bool isSupport) {
-    Navigator.pop(context); // Close the dialog
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PaymentPage(
           amount: amount,
           isSupport: isSupport,
-          cropName: widget.data['cropType'] ?? 'Unknown Crop', // Crop name
-          farmerName: widget.data['farmerName'] ?? 'Unknown Farmer', // Farmer name
-          farmerPhone: widget.data['farmerPhone'] ?? '', // Farmer phone number
+          cropName: widget.data['cropType'] ?? 'Unknown Crop',
+          farmerName: widget.data['farmerName'] ?? 'Unknown Farmer',
+          farmerPhone: widget.data['farmerPhone'] ?? '',
         ),
       ),
     );

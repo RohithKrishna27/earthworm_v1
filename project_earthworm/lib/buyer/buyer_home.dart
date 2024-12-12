@@ -5,7 +5,7 @@ import 'package:project_earthworm/buyer/buyer_profile_page.dart';
 import 'package:project_earthworm/buyer/won_auction_page.dart';
 import 'auction_card.dart';
 import 'buyer_auction_page.dart';
-
+import 'orderhistory.dart';
 class BuyerHome extends StatefulWidget {
   @override
   _BuyerHomeState createState() => _BuyerHomeState();
@@ -326,12 +326,18 @@ class BuyerHomePage extends StatelessWidget {
                     crossAxisSpacing: 16,
                     childAspectRatio: 1.5,
                     children: [
-                      _buildFeatureCard(
+                     
+                        _buildFeatureCard(
                         context,
-                        'Dashboard',
-                        Icons.dashboard,
-                        Colors.blue,
-                        () => Navigator.pushNamed(context, '/buyer/dashboard'),
+                        'Order History',
+                        Icons.history,
+                        Colors.red,
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                          builder: (context) => OrderHistoryPage(),
+                          ),
+                        ),
                       ),
                       _buildFeatureCard(
                         context,
