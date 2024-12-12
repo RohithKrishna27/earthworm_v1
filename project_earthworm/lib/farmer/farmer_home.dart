@@ -4,6 +4,7 @@ import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
 import 'package:project_earthworm/farmer/calculator/calculator_home.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
 import 'insurance_signup.dart';
+import "package:project_earthworm/buyer/chatboat.dart";
 
 enum Language { English, Kannada, Hindi }
 
@@ -89,6 +90,7 @@ class _FarmerHomeState extends State<FarmerHome> {
     final List<Widget> _pages = [
       HomeScreen(localizedStrings: _localizedStrings[_selectedLanguage]!),
       CalculatorHomeScreen(),
+      ChatScreen(),
     ];
 
     return Scaffold(
@@ -145,8 +147,8 @@ class _FarmerHomeState extends State<FarmerHome> {
             label: 'Farming Calculators',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Community',
+            icon: Icon(Icons.chat),
+            label: 'Chat bot',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
