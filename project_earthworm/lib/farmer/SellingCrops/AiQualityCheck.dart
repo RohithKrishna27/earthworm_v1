@@ -610,8 +610,9 @@ class ResultsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+         
             Text(
-              'Based on the analysis, the recommended price for your crop is:',
+              'Based on the analysis, the recommended price for your crop is:( formula used : rating * 10% of max price * scaling factor(1.05))',
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
