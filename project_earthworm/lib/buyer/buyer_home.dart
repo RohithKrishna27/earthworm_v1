@@ -5,6 +5,8 @@ import 'package:project_earthworm/buyer/buyer_profile_page.dart';
 import 'package:project_earthworm/buyer/won_auction_page.dart';
 import 'auction_card.dart';
 import 'buyer_auction_page.dart';
+import 'product_quality.dart';
+import 'chatboat.dart';
 
 class BuyerHome extends StatefulWidget {
   @override
@@ -78,7 +80,7 @@ class _BuyerHomeState extends State<BuyerHome> {
 
         // Navigate to login screen and clear navigation stack
         Navigator.of(context).pushNamedAndRemoveUntil(
-          '/login',
+          '/signin',
           (Route<dynamic> route) => false,
         );
 
@@ -327,12 +329,17 @@ class BuyerHomePage extends StatelessWidget {
                     childAspectRatio: 1.5,
                     children: [
                       _buildFeatureCard(
-                        context,
-                        'Dashboard',
-                        Icons.dashboard,
-                        Colors.blue,
-                        () => Navigator.pushNamed(context, '/buyer/dashboard'),
-                      ),
+                          context,
+                          'Product Quality',
+                          Icons.high_quality_outlined,
+                          Colors.blue,
+                          () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const BuyerQualityCheckPage(),
+                                ),
+                              )),
                       _buildFeatureCard(
                         context,
                         'Browse Crops',
@@ -342,12 +349,16 @@ class BuyerHomePage extends StatelessWidget {
                             Navigator.pushNamed(context, '/buyer/browse-crops'),
                       ),
                       _buildFeatureCard(
-                        context,
-                        'AI Assistant',
-                        Icons.chat,
-                        Colors.orange,
-                        () => Navigator.pushNamed(context, '/buyer/chat-bot'),
-                      ),
+                          context,
+                          'AI Assistant',
+                          Icons.chat,
+                          Colors.orange,
+                          () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatScreen(),
+                                ),
+                              )),
                       _buildFeatureCard(
                         context,
                         'Market Insights',
