@@ -1303,11 +1303,33 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
             _buildFinancialForm(),
             const SizedBox(height: 16),
             _buildFinancialSummary(),
+            const SizedBox(height: 16),
+            
           ],
         ),
       ),
     );
   }
+
+  Widget _buildPricePredictionSection() {
+  return Card(
+    elevation: 4,
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Crop Price Prediction/ಬೆಳೆ ಬೆಲೆ ಮುನ್ಸೂಚನೆ',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 16),
+          PricePredictionForm(),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildFinancialForm() {
     return Column(
@@ -1539,6 +1561,8 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                     const SizedBox(height: 16),
                     _buildInventorySection(),
                     const SizedBox(height: 16),
+                    _buildPricePredictionSection(),
+                    const SizedBox(height: 16),
                     _buildFinancialSection(),
                   ],
                 ),
@@ -1736,5 +1760,213 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
 extension StringExtension on String {
   String capitalize() {
     return "${this[0].toUpperCase()}${substring(1)}";
+  }
+}
+class PricePredictionForm extends StatefulWidget {
+  const PricePredictionForm({super.key});
+
+  @override
+  State<PricePredictionForm> createState() => _PricePredictionFormState();
+}
+
+class _PricePredictionFormState extends State<PricePredictionForm> {
+  final _formKey = GlobalKey<FormState>();
+  
+  String? state;
+  String? district;
+  String? market;
+  String? commodity;
+  String? variety;
+  String? grade;
+  
+  double? predictedPrice;
+  bool isLoading = false;
+  String? errorMessage;
+
+  Future<void> getPrediction() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://evident-cosine-442010-n1-440160446921.us-central1.run.app/predict'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'State': state,
+          'District': district,
+          'Market': market,
+          'Commodity': commodity,
+          'Variety': variety,
+          'Grade': grade,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          predictedPrice = data['predicted_price'];
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Failed to get prediction. Please try again.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            decoration: const InputDecoration(
+              labelText: 'State/ರಾಜ್ಯ',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the state';
+              }
+              return null;
+            },
+            onSaved: (value) => state = value,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            decoration: const InputDecoration(
+              labelText: 'District/ಜಿಲ್ಲೆ',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the district';
+              }
+              return null;
+            },
+            onSaved: (value) => district = value,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            decoration: const InputDecoration(
+              labelText: 'Market/ಮಾರುಕಟ್ಟೆ',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the market';
+              }
+              return null;
+            },
+            onSaved: (value) => market = value,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            decoration: const InputDecoration(
+              labelText: 'Commodity/ಸರಕು',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the commodity';
+              }
+              return null;
+            },
+            onSaved: (value) => commodity = value,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            decoration: const InputDecoration(
+              labelText: 'Variety/ವೈವಿಧ್ಯ',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the variety';
+              }
+              return null;
+            },
+            onSaved: (value) => variety = value,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            decoration: const InputDecoration(
+              labelText: 'Grade/ಗ್ರೇಡ್',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the grade';
+              }
+              return null;
+            },
+            onSaved: (value) => grade = value,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: isLoading
+                ? null
+                : () {
+                    if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
+                      getPrediction();
+                    }
+                  },
+            child: isLoading
+                ? const CircularProgressIndicator()
+                : const Text('Get Price Prediction/ಬೆಲೆ ಮುನ್ಸೂಚನೆ ಪಡೆಯಿರಿ'),
+          ),
+          if (errorMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Text(
+                errorMessage!,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          if (predictedPrice != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Predicted Price/ಮುನ್ಸೂಚಿತ ಬೆಲೆ',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '₹${predictedPrice!.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

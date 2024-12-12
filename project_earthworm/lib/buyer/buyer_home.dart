@@ -5,7 +5,7 @@ import 'package:project_earthworm/buyer/buyer_profile_page.dart';
 import 'package:project_earthworm/buyer/won_auction_page.dart';
 import 'auction_card.dart';
 import 'buyer_auction_page.dart';
-import 'product_quality.dart';
+import 'orderhistory.dart';import 'product_quality.dart';
 import 'chatboat.dart';
 
 class BuyerHome extends StatefulWidget {

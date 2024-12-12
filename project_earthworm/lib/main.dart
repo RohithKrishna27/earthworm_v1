@@ -20,6 +20,7 @@ import 'package:project_earthworm/farmer/knowledge/learn_home.dart';
 import 'farmer/crop_scheduling/crop_scheduling.dart';
 import 'farmer/crop_scheduling/traditional/crop_choice.dart';
 import 'package:project_earthworm/farmer/CropAnalysisScreen.dart';
+import 'package:project_earthworm/rise.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +59,8 @@ class MyApp extends StatelessWidget {
           '/sell-business': (context) =>
               CropDetailsForm(currentUserId: currentUserId),
           '/learn-home': (context) => LearnHome(),
-          '/buyer/browse-crops': (context) => BuyerFeedPage()
+          '/buyer/browse-crops': (context) => BuyerFeedPage(),
+          '/earthworm-rise' : (context) => Earthwormrise(),
         },
       ),
     );
