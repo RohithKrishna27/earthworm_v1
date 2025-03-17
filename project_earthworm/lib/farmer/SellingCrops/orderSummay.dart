@@ -1,4 +1,3 @@
-// order_summary_page.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -18,30 +17,12 @@ class OrderSummaryPage extends StatelessWidget {
     required this.isDirectSale,
   }) : super(key: key);
 
-  Future<void> _placeOrder(BuildContext context) async {
+  Future<void> _placeDirectOrder(BuildContext context) async {
     try {
-      final quantity = formData['cropDetails']['weight'] as double;
-
-      // Add this check at the beginning of the method
-      if (!isDirectSale && quantity >= 50) {
-        // Navigate to auction setup instead of direct placement
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AuctionValidationPage(
-              formData: formData,
-              qualityScores: qualityScores,
-              imageUrls: imageUrls,
-              isDirectSale: isDirectSale,
-            ),
-          ),
-        );
-        return;
-      }
-final mspDetails = formData['cropDetails']['mspCompliance'];
+      final mspDetails = formData['cropDetails']['mspCompliance'];
       final expectedPrice = formData['cropDetails']['expectedPrice'] as double;
       // Add order to Firestore
-     await FirebaseFirestore.instance.collection('orders').add({
+      await FirebaseFirestore.instance.collection('orders').add({
         'userId': formData['farmerDetails']['farmerId'],
         'farmerName': formData['farmerDetails']['name'],
         'farmerPhone': formData['farmerDetails']['phone'],
@@ -57,7 +38,7 @@ final mspDetails = formData['cropDetails']['mspCompliance'];
         'groupMembers': formData['groupFarming']['members'],
         'address': formData['address'],
         'description': formData['description'],
-        'isDirectSale': isDirectSale,
+        'isDirectSale': true,
         'status': 'pending',
         'orderDate': FieldValue.serverTimestamp(),
         // Added MSP related fields
@@ -86,12 +67,29 @@ final mspDetails = formData['cropDetails']['mspCompliance'];
     }
   }
 
+  void _goToAuctionSetup(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AuctionValidationPage(
+          formData: formData,
+          qualityScores: qualityScores,
+          imageUrls: imageUrls,
+          isDirectSale: false, // Always pass false for auction
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currencyFormat =
         NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 2);
     final totalPrice = formData['cropDetails']['expectedPrice'] *
         formData['cropDetails']['weight'];
+    
+    // Check if eligible for auction (quantity >= 50)
+    final isEligibleForAuction = formData['cropDetails']['weight'] >= 50;
 
     return Scaffold(
       appBar: AppBar(
@@ -223,21 +221,93 @@ final mspDetails = formData['cropDetails']['mspCompliance'];
               ),
             ),
 
-            // Place Order Button
+            // Sale Options
             Padding(
               padding: const EdgeInsets.all(16),
-              child: ElevatedButton(
-                onPressed: () => _placeOrder(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Choose Sale Option',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () => _placeDirectOrder(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.shopping_cart),
+                                    SizedBox(height: 8),
+                                    Text('Direct Sale'),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Fixed price sale',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: isEligibleForAuction 
+                                  ? () => _goToAuctionSetup(context)
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                disabledBackgroundColor: Colors.grey,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: Column(
+                                  children: [
+                                    const Icon(Icons.gavel),
+                                    const SizedBox(height: 8),
+                                    const Text('Auction'),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      isEligibleForAuction 
+                                          ? 'Competitive bidding'
+                                          : 'Requires 50+ quintals',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ),
-                child: const Text(
-                  'Confirm Order',
-                  style: TextStyle(fontSize: 18),
                 ),
               ),
             ),
