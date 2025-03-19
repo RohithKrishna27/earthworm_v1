@@ -5,11 +5,11 @@ class TodoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Todo List'),
+        title: Text('empty page'),
       ),
       body: Center(
         child: Text(
-            'This is the farmer task list page i am working on this right now'),
+            'This is the farmer page is under developing phase'),
       ),
     );
   }

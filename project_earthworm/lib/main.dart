@@ -18,7 +18,7 @@ import 'package:project_earthworm/sign-in-up-screeens/signup_page.dart';
 import 'package:project_earthworm/sign-in-up-screeens/splash_screen.dart';
 import 'package:project_earthworm/farmer/knowledge/learn_home.dart';
 import 'farmer/crop_scheduling/crop_scheduling.dart';
-import 'farmer/crop_scheduling/traditional/crop_choice.dart';
+import 'farmer/crop_scheduling/advanced/todo.dart';
 import 'package:project_earthworm/farmer/CropAnalysisScreen.dart';
 import 'package:project_earthworm/rise.dart';
 
@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
           '/sell-crops': (context) => SellingCropHomePage(),
           '/sell-business': (context) =>
               CropDetailsForm(currentUserId: currentUserId),
-          '/learn-home': (context) => LearnHome(),
+          '/learn-home': (context) => TodoPage(),
           '/buyer/browse-crops': (context) => BuyerFeedPage(),
           '/earthworm-rise' : (context) => Earthwormrise(),
         },

@@ -5,6 +5,7 @@ import 'package:project_earthworm/farmer/calculator/calculator_home.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
 import 'insurance_signup.dart';
 import "package:project_earthworm/buyer/chatboat.dart";
+import 'package:project_earthworm/farmer/crop_scheduling/advanced/todo.dart';
 
 enum Language { English, Kannada, Hindi }
 
@@ -92,6 +93,7 @@ class _FarmerHomeState extends State<FarmerHome> {
       CalculatorHomeScreen(),
       const ChatbotWebView(
           chatbotUrl: "https://effulgent-semifreddo-39d899.netlify.app/"),
+      TodoPage(),
     ];
 
     return Scaffold(
