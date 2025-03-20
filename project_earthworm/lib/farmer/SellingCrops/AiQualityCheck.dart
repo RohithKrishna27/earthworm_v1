@@ -729,7 +729,7 @@ class ResultsPage extends StatelessWidget {
                           style: GoogleFonts.poppins(fontSize: 16),
                         ),
                         Text(
-                          '₹${formData['cropDetails']['expectedPrice']} per kg',
+                          '₹${formData['cropDetails']['expectedPrice']} per quintal',
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,

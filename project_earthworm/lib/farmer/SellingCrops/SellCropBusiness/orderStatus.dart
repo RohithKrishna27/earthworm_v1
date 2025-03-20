@@ -52,7 +52,7 @@ class OrderStatusPage extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('orders')
+            .collection('order')
             .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
             .orderBy('orderDate', descending: true)
             .snapshots(),

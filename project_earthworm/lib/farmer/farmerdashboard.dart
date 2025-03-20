@@ -896,7 +896,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Farming Weather Conditions/ಕೃಷಿ ಹವಾಮಾನ ಪರಿಸ್ಥಿತಿಗಳು',
+              'Farming Weather Conditions',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
@@ -1126,7 +1126,7 @@ Widget _buildMarketTrends() {
             child: ElevatedButton.icon(
               icon: const Icon(Icons.analytics_outlined, size: 24),
               label: const Text(
-                'Advanced Price Prediction/ಸುಧಾರಿತ ಬೆಲೆ ಮುನ್ಸೂಚನೆ',
+                'Advanced Price Prediction',
                 style: TextStyle(fontSize: 16),
               ),
               style: ElevatedButton.styleFrom(
@@ -1242,7 +1242,7 @@ Widget _buildMarketTrends() {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Financial Managementಹಣಕಾಸು ನಿರ್ವಹಣೆ',
+              'Financial Management',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
@@ -1263,7 +1263,7 @@ Widget _buildMarketTrends() {
     return Column(
       children: [
         ExpansionTile(
-          title: const Text('Add Expense/ಖರ್ಚು ಸೇರಿಸು'),
+          title: const Text('Add Expense'),
           children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -1296,7 +1296,7 @@ Widget _buildMarketTrends() {
           ],
         ),
         ExpansionTile(
-          title: const Text('Add Income/ಆದಾಯ ಸೇರಿಸು'),
+          title: const Text('Add Income'),
           children: [
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -1362,7 +1362,7 @@ Widget _buildMarketTrends() {
           children: [
             Card(
               child: ListTile(
-                title: const Text('Net Balance/ನಿವ್ವಳ ಮೊತ್ತ'),
+                title: const Text('Net Balance'),
                 trailing: Text(
                   '₹${(totalIncome - totalExpenses).toStringAsFixed(2)}',
                   style: TextStyle(
@@ -1757,7 +1757,7 @@ class _PricePredictionFormState extends State<PricePredictionForm> {
         children: [
           TextFormField(
             decoration: const InputDecoration(
-              labelText: 'State/ರಾಜ್ಯ',
+              labelText: 'State',
               border: OutlineInputBorder(),
             ),
             validator: (value) {
@@ -1771,7 +1771,7 @@ class _PricePredictionFormState extends State<PricePredictionForm> {
           const SizedBox(height: 16),
           TextFormField(
             decoration: const InputDecoration(
-              labelText: 'District/ಜಿಲ್ಲೆ',
+              labelText: 'District',
               border: OutlineInputBorder(),
             ),
             validator: (value) {
@@ -1785,7 +1785,7 @@ class _PricePredictionFormState extends State<PricePredictionForm> {
           const SizedBox(height: 16),
           TextFormField(
             decoration: const InputDecoration(
-              labelText: 'Market/ಮಾರುಕಟ್ಟೆ',
+              labelText: 'Market',
               border: OutlineInputBorder(),
             ),
             validator: (value) {
@@ -1799,7 +1799,7 @@ class _PricePredictionFormState extends State<PricePredictionForm> {
           const SizedBox(height: 16),
           TextFormField(
             decoration: const InputDecoration(
-              labelText: 'Commodity/ಸರಕು',
+              labelText: 'Commodity',
               border: OutlineInputBorder(),
             ),
             validator: (value) {
@@ -1813,7 +1813,7 @@ class _PricePredictionFormState extends State<PricePredictionForm> {
           const SizedBox(height: 16),
           TextFormField(
             decoration: const InputDecoration(
-              labelText: 'Variety/ವೈವಿಧ್ಯ',
+              labelText: 'Variety',
               border: OutlineInputBorder(),
             ),
             validator: (value) {
@@ -1827,7 +1827,7 @@ class _PricePredictionFormState extends State<PricePredictionForm> {
           const SizedBox(height: 16),
           TextFormField(
             decoration: const InputDecoration(
-              labelText: 'Grade/ಗ್ರೇಡ್',
+              labelText: 'Grade',
               border: OutlineInputBorder(),
             ),
             validator: (value) {
@@ -1850,7 +1850,7 @@ class _PricePredictionFormState extends State<PricePredictionForm> {
                   },
             child: isLoading
                 ? const CircularProgressIndicator()
-                : const Text('Get Price Prediction/ಬೆಲೆ ಮುನ್ಸೂಚನೆ ಪಡೆಯಿರಿ'),
+                : const Text('Get Price Prediction'),
           ),
           if (errorMessage != null)
             Padding(
@@ -1869,7 +1869,7 @@ class _PricePredictionFormState extends State<PricePredictionForm> {
                   child: Column(
                     children: [
                       const Text(
-                        'Predicted Price/ಮುನ್ಸೂಚಿತ ಬೆಲೆ',
+                        'Predicted Price',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

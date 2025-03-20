@@ -15,7 +15,7 @@ class OrderHistoryPage extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('orders')
+            .collection('order')
             .orderBy('orderDate', descending: true)
             .snapshots(),
         builder: (context, snapshot) {

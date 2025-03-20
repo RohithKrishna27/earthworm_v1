@@ -22,7 +22,7 @@ class OrderSummaryPage extends StatelessWidget {
       final mspDetails = formData['cropDetails']['mspCompliance'];
       final expectedPrice = formData['cropDetails']['expectedPrice'] as double;
       // Add order to Firestore
-      await FirebaseFirestore.instance.collection('orders').add({
+      await FirebaseFirestore.instance.collection('order').add({
         'userId': formData['farmerDetails']['farmerId'],
         'farmerName': formData['farmerDetails']['name'],
         'farmerPhone': formData['farmerDetails']['phone'],

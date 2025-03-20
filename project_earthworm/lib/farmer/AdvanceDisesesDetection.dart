@@ -18,7 +18,7 @@ class _AdvanceDiseasesDetectionState extends State<AdvanceDiseasesDetection> {
   final picker = ImagePicker();
   final String cropHealthApiKey = "02FB5GJe3fyNonD9DLB84rQ4AP5nIwrJOQKtZLInOMZZpW30RU"; // Replace with your actual API key
   final String cropHealthApiUrl = "https://crop.kindwise.com/api/v1/identification";
-  final String geminiApiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCAGtWDRBB3dQf9eqiJLqAsjrUHpQB3seI"; // Replace with your Gemini API key
+  final String geminiApiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBHZH-qGsEjnyoKDcpCM-BzfLIr9YdUJkU"; // Replace with your Gemini API key
 
   Future<void> _pickImage(bool fromCamera) async {
     final pickedFile = await picker.pickImage(source: fromCamera ? ImageSource.camera : ImageSource.gallery);

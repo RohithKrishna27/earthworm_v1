@@ -133,6 +133,7 @@ class AuctionDetailPage extends StatelessWidget {
   Widget _buildFarmerDetails(Map<String, dynamic> farmerDetails) {
     // Get the farmer ID from farmerDetails
     final farmerId = farmerDetails['id'];
+    final loc=auctionData['location'];
 
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
@@ -221,8 +222,8 @@ class AuctionDetailPage extends StatelessWidget {
                   firestoreFarmerData['landSize'] != null
                       ? '${firestoreFarmerData['landSize']} acres'
                       : 'Not specified'),
-              _buildFarmerInfoRow(Icons.location_on, 'Location',
-                  locationStr.isNotEmpty ? locationStr : 'Not specified'),
+              _buildFarmerInfoRow(Icons.location_on, 'District',
+                  loc.isNotEmpty ? loc['district'] : 'Not specified'),
               _buildFarmerInfoRow(Icons.phone, 'Phone', farmerDetails['phone']),
               _buildFarmerInfoRow(Icons.location_on, 'Address',
                   '${farmerDetails['address'] ?? ''}, ${farmerDetails['district'] ?? ''}, ${farmerDetails['state'] ?? ''}'),

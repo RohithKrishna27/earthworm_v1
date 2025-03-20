@@ -162,6 +162,8 @@ class _WonAuctionCard extends StatelessWidget {
     final cropDetails = auction['cropDetails'] as Map<String, dynamic>? ?? {};
     final farmerDetails =
         auction['farmerDetails'] as Map<String, dynamic>? ?? {};
+    final location =
+        auction['location'] as Map<String, dynamic>? ?? {};
     final winningBid = auction['winningBid'] ?? auction['currentBid'] ?? 0.0;
 
     return Card(

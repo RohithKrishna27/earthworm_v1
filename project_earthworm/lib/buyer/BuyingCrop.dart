@@ -17,8 +17,8 @@ class BuyerFeedPage extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('crop_sales')
-            .orderBy('createdAt', descending: true)
+            .collection('order')
+            .where('status', isEqualTo: 'pending')
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -146,7 +146,7 @@ class CropCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '₹${formatter.format(data['expectedPrice'] ?? 0)}/quintal',
+                        '₹${formatter.format(data['pricePerQuintal'] ?? 0)}/quintal',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -335,7 +335,7 @@ class _DetailedCropViewState extends State<DetailedCropView> {
             widget.data['mspDetails']['mspPrice'] != null
         ? widget.data['mspDetails']['mspPrice']
         : null;
-    final listedPrice = widget.data['expectedPrice'] ?? 0;
+    final listedPrice = widget.data['pricePerQuintal'] ?? 0;
     final quantity = widget.data['quantity'] ?? 0;
 
     return DraggableScrollableSheet(

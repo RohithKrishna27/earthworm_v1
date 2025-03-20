@@ -881,7 +881,7 @@ final textFieldDecoration = InputDecoration(
               decoration: textFieldDecoration.copyWith(
                 labelText: 'Crop Weight (Quintals)',
                 prefixIcon: Icon(Icons.scale, color: Colors.green[600]),
-                helperText: 'Minimum 1 quintal required for bidding eligibility',
+                helperText: 'Minimum 50 quintal required for bidding eligibility',
                 suffixText: 'Quintals',
               ),
               keyboardType: TextInputType.number,
