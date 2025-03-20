@@ -724,31 +724,6 @@ Widget _buildCropDetailsCard() {
               ),
             const SizedBox(height: 16),
 
-<<<<<<< Updated upstream
-            // Weight Input
-            TextFormField(
-              controller: _weightController,
-              decoration: textFieldDecoration.copyWith(
-                labelText: 'Crop Weight (Quintals)',
-                prefixIcon: Icon(Icons.scale, color: Colors.green[600]),
-                helperText: 'Minimum 50 quintal required for bidding eligibility',
-                suffixText: 'Quintals',
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter crop weight';
-                }
-                final weight = double.tryParse(value);
-                if (weight == null) {
-                  return 'Please enter a valid number';
-                }
-                if (weight < 1) {
-                  return 'Minimum weight requirement is 1 quintal';
-                }
-                return null;
-              },
-=======
             // Weight Input Section
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -809,7 +784,6 @@ Widget _buildCropDetailsCard() {
                   ],
                 ),
               ],
->>>>>>> Stashed changes
             ),
             const SizedBox(height: 24),
 
@@ -891,7 +865,7 @@ Widget _buildCropDetailsCard() {
             TextFormField(
               controller: _weightController,
               decoration: const InputDecoration(
-                labelText: 'Crop Weight',
+                labelText: 'Crop Weight )',
                 border: OutlineInputBorder(),
                 filled: true,
                 helperText: 'Minimum 1 quintal required for bidding eligibility',
