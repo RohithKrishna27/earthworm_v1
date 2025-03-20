@@ -746,7 +746,7 @@ class ResultsPage extends StatelessWidget {
                           style: GoogleFonts.poppins(fontSize: 16),
                         ),
                         Text(
-                          '₹${adjustedPrice.toStringAsFixed(2)} per kg',
+                          '₹${adjustedPrice.toStringAsFixed(2)} per quintal',
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

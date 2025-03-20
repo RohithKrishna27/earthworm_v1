@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 import 'buyer_bidding_page.dart';
 
 class AuctionDetailPage extends StatelessWidget {
@@ -230,6 +231,58 @@ class AuctionDetailPage extends StatelessWidget {
               if (farmerDetails['certifications'] != null)
                 _buildFarmerInfoRow(Icons.verified, 'Certifications',
                     farmerDetails['certifications'].join(', ')),
+              // Add Farmer UID with copy functionality
+              InkWell(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: farmerId));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Farmer ID copied to clipboard'),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.fingerprint, size: 20, color: Colors.green[700]),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Farmer ID',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    farmerId,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black87,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Icon(Icons.copy, size: 16, color: Colors.green[700]),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -278,6 +331,7 @@ class AuctionDetailPage extends StatelessWidget {
     final winnerId = auctionData['winner'] is Map
         ? auctionData['winner']['id']
         : auctionData['winner'];
+    final farmerId = auctionData['farmerDetails']?['id'];
 
     // Calculate total amount
     final quantity = (auctionData['cropDetails']?['quantity'] ?? 0) as num;
@@ -285,27 +339,105 @@ class AuctionDetailPage extends StatelessWidget {
 
     if (status == 'completed' && winnerId == currentUserId) {
       if (auctionData['paymentStatus'] == 'completed') {
-        return Container(
-          padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          decoration: BoxDecoration(
-            color: Colors.green[50],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 24),
-              SizedBox(width: 8),
-              Text(
-                'Payment Completed',
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+        return Column(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    'Payment Completed',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Add Farmer UID with Copy Functionality when payment is completed
+            if (farmerId != null)
+              Container(
+                margin: EdgeInsets.only(top: 16),
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue[200]!, width: 1),
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Clipboard.setData(ClipboardData(text: farmerId));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Farmer ID copied to clipboard'),
+                        backgroundColor: Colors.blue,
+                        behavior: SnackBarBehavior.floating,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Icon(Icons.fingerprint, color: Colors.blue[700], size: 24),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Farmer ID',
+                              style: TextStyle(
+                                color: Colors.blue[700],
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              farmerId,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.copy, size: 16, color: Colors.blue[700]),
+                            SizedBox(width: 4),
+                            Text(
+                              'Copy',
+                              style: TextStyle(
+                                color: Colors.blue[700],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
+          ],
         );
       }
 

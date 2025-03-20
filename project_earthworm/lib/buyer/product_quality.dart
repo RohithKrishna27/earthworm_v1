@@ -37,7 +37,7 @@ class _BuyerQualityCheckPageState extends State<BuyerQualityCheckPage> {
 
       // Try to fetch from orders collection
       final orderQuery = await FirebaseFirestore.instance
-          .collection('orders')
+          .collection('auctions')
           .where('userId', isEqualTo: userId)
           .get();
 
@@ -47,7 +47,7 @@ class _BuyerQualityCheckPageState extends State<BuyerQualityCheckPage> {
       if (orderQuery.docs.isEmpty) {
         // If not found in orders, try crop_sales collection
         final cropSalesQuery = await FirebaseFirestore.instance
-            .collection('crop_sales')
+            .collection('order')
             .where('userId', isEqualTo: userId)
             .get();
 
@@ -155,15 +155,145 @@ class _BuyerQualityCheckPageState extends State<BuyerQualityCheckPage> {
   }
 
   Future<Map<String, dynamic>> analyzeImage(String imagePath) async {
-    final url = Uri.parse(
-        'https://crop-analysis-440160446921.us-central1.run.app/predict');
-    final request = http.MultipartRequest('POST', url)
-      ..files.add(await http.MultipartFile.fromPath('image', imagePath));
+  // First get the image data from the file
+  final File imageFile = File(imagePath);
+  final List<int> imageBytes = await imageFile.readAsBytes();
+  
+  // Convert image data to base64
+  final String base64Image = base64Encode(imageBytes);
+  
+  // Determine crop type from order data
+  final String cropType = orderData?['cropType'] ?? 'unknown';
+  
+  // Create prompt for Gemini API that specifies what we need
+  final prompt = '''
+  Analyze this $cropType crop image and provide detailed assessment on the following quality parameters. 
+  Rate each parameter on a scale of 0.0 to 0.9 (where 0.9 is excellent quality):
+  
+  1. Batch_Consistency: How uniform the crop samples are
+  2. Color: How appropriate and vibrant the color is for this crop type
+  3. Firmness: How firm and not overripe the crop appears
+  4. Shape_and_Size: How ideal the shape and size are for this crop type
+  5. Texture: How appropriate the surface texture appears
+  6. Damaged: Amount of visible damage, blemishes or disease (0.0 means no damage, 0.9 means extensive damage)
+  
+  Provide results in JSON format with only these keys and numerical values.
+  ''';
 
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-    return jsonDecode(response.body);
+  // Define the request body
+  final requestBody = {
+    'contents': [
+      {
+        'parts': [
+          {'text': prompt},
+          {
+            'inline_data': {
+              'mime_type': 'image/jpeg',
+              'data': base64Image
+            }
+          }
+        ]
+      }
+    ],
+    'generationConfig': {
+      'temperature': 0.1,
+      'topK': 32,
+      'topP': 1,
+      'maxOutputTokens': 4096,
+    }
+  };
+
+  // Make the API request
+  final response = await http.post(
+    Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=AIzaSyBHZH-qGsEjnyoKDcpCM-BzfLIr9YdUJkU'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode(requestBody),
+  );
+
+  if (response.statusCode == 200) {
+    final jsonResponse = jsonDecode(response.body);
+    
+    try {
+      // Extract the text content from the response
+      final textContent = jsonResponse['candidates'][0]['content']['parts'][0]['text'];
+      print('API Response: $textContent'); // Add this for debugging
+      
+      // Try to find JSON in the response
+      // First, try to parse the entire text as JSON
+      try {
+        final parsedJson = jsonDecode(textContent);
+        return _normalizeAnalysisResult(parsedJson);
+      } catch (e) {
+        // If that fails, try to extract JSON from markdown code blocks
+        final jsonRegex = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```');
+        final match = jsonRegex.firstMatch(textContent);
+        
+        if (match != null && match.group(1) != null) {
+          final jsonText = match.group(1)!.trim();
+          try {
+            final parsedJson = jsonDecode(jsonText);
+            return _normalizeAnalysisResult(parsedJson);
+          } catch (e) {
+            print('Error parsing extracted JSON: $e');
+          }
+        }
+        
+        // If that fails, try to find any JSON-like structure
+        final braceRegex = RegExp(r'{[\s\S]*?}');
+        final braceMatch = braceRegex.firstMatch(textContent);
+        
+        if (braceMatch != null) {
+          try {
+            final parsedJson = jsonDecode(braceMatch.group(0)!);
+            return _normalizeAnalysisResult(parsedJson);
+          } catch (e) {
+            print('Error parsing JSON from braces: $e');
+          }
+        }
+      }
+    } catch (e) {
+      print('Error processing API response: $e');
+    }
+  } else {
+    print('API Error: ${response.statusCode}, ${response.body}');
   }
+  
+  // Return default values if anything fails
+  return {
+    'Batch_Consistency': 0.5,
+    'Color': 0.5,
+    'Firmness': 0.5,
+    'Shape_and_Size': 0.5,
+    'Texture': 0.5,
+    'Damaged': 0.3,
+  };
+}
+
+Map<String, dynamic> _normalizeAnalysisResult(Map<String, dynamic> raw) {
+  return {
+    'Batch_Consistency': _parseDouble(raw['Batch_Consistency']) ?? 0.5,
+    'Color': _parseDouble(raw['Color']) ?? 0.5,
+    'Firmness': _parseDouble(raw['Firmness']) ?? 0.5,
+    'Shape_and_Size': _parseDouble(raw['Shape_and_Size']) ?? 0.5,
+    'Texture': _parseDouble(raw['Texture']) ?? 0.5,
+    'Damaged': _parseDouble(raw['Damaged']) ?? 0.3,
+  };
+}
+
+
+double? _parseDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is int) return value.toDouble();
+  if (value is String) {
+    try {
+      return double.parse(value);
+    } catch (_) {
+      return null;
+    }
+  }
+  return null;
+}
 
   void compareResults() {
     final buyerAnalysis = calculateAverageResults();
@@ -178,38 +308,36 @@ class _BuyerQualityCheckPageState extends State<BuyerQualityCheckPage> {
     });
   }
 
-  Map<String, double> calculateAverageResults() {
-    Map<String, double> averages = {};
-    final parameters = [
-      'Batch_Consistency',
-      'Color',
-      'Firmness',
-      'Shape_and_Size',
-      'Texture'
-    ];
+ Map<String, double> calculateAverageResults() {
+  Map<String, double> averages = {};
+  // Parameters to consider for average (excluding Damaged)
+  final parameters = [
+    'Batch_Consistency', 'Color', 'Firmness',
+    'Shape_and_Size', 'Texture'
+  ];
 
-    for (var param in parameters) {
-      double sum = 0;
-      for (var result in analysisResults) {
-        sum += (result[param] ?? 0) * 10 + 1;
-      }
-      averages[param] = sum / analysisResults.length;
-    }
-
-    // Calculate damaged score
-    double damagedSum = 0;
+  // Calculate individual parameter averages
+  for (var param in parameters) {
+    double sum = 0;
     for (var result in analysisResults) {
-      damagedSum += (result['Damaged'] ?? 0) * 10 + 1;
+      sum += (result[param] ?? 0) * 10 + 1;
     }
-    averages['Damaged'] = damagedSum / analysisResults.length;
-
-    // Calculate overall quality
-    double totalSum =
-        parameters.fold(0.0, (sum, param) => sum + averages[param]!);
-    averages['Overall_Quality'] = totalSum / parameters.length;
-
-    return averages;
+    averages[param] = sum / analysisResults.length;
   }
+
+  // Add damaged score separately (not included in overall average)
+  double damagedSum = 0;
+  for (var result in analysisResults) {
+    damagedSum += (result['Damaged'] ?? 0) * 10 + 1;
+  }
+  averages['Damaged'] = damagedSum / analysisResults.length;
+
+  // Calculate overall quality as average of parameters (excluding Damaged)
+  double totalSum = parameters.fold(0.0, (sum, param) => sum + averages[param]!);
+  averages['Overall_Quality'] = totalSum / parameters.length;
+
+  return averages;
+}
 
   Map<String, double> calculateDifferences(
     Map<String, double> buyerResults,
