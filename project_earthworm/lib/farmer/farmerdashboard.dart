@@ -15,6 +15,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:carousel_slider/carousel_controller.dart'; // Add this import
 import 'package:geocoding/geocoding.dart';
+import 'package:project_earthworm/farmer/advanceprice.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1088,43 +1089,71 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
     return Random().nextBool() ? 'up' : 'down';
   }
 
-  Widget _buildMarketTrends() {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Market Trends/ಮಾರುಕಟ್ಟೆ ಪ್ರವೃತ್ತಿಗಳು',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 200,
-              child: CarouselSlider.builder(
-                itemCount: _marketData.length,
-                options: CarouselOptions(
-                  autoPlay: true,
-                  aspectRatio: 2.0,
-                  enlargeCenterPage: true,
-                  onPageChanged: (index, reason) {
-                    setState(() => _currentMarketIndex = index);
-                  },
-                ),
-                itemBuilder: (context, index, realIndex) {
-                  final item = _marketData[index];
-                  return _buildMarketCard(item);
+Widget _buildMarketTrends() {
+  return Card(
+    elevation: 4,
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Current Market Prices',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 200,
+            child: CarouselSlider.builder(
+              itemCount: _marketData.length,
+              options: CarouselOptions(
+                autoPlay: true,
+                aspectRatio: 2.0,
+                enlargeCenterPage: true,
+                onPageChanged: (index, reason) {
+                  setState(() => _currentMarketIndex = index);
                 },
               ),
+              itemBuilder: (context, index, realIndex) {
+                final item = _marketData[index];
+                return _buildMarketCard(item);
+              },
             ),
-          ],
-        ),
+          ),
+          // Add the prediction button here
+          const SizedBox(height: 20),
+          Center(
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.analytics_outlined, size: 24),
+              label: const Text(
+                'Advanced Price Prediction/ಸುಧಾರಿತ ಬೆಲೆ ಮುನ್ಸೂಚನೆ',
+                style: TextStyle(fontSize: 16),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 16),
+                backgroundColor: Colors.blue[700],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 3,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>  AdvancedPricePrediction(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
-    );
-  }
-
+    ),
+  );
+}
   Widget _buildMarketCard(Map<String, dynamic> item) {
     return Card(
       color: Colors.white,
@@ -1170,89 +1199,6 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
                   size: 24,
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInventorySection() {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Inventory Management/ಸ್ಟಾಕ್ ನಿರ್ವಹಣೆ',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-            Form(
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _itemNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Item Name/ಐಟಂ ಹೆಸರು',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _quantityController,
-                    decoration: const InputDecoration(
-                      labelText: 'Quantity/ಪ್ರಮಾಣ',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _unitPriceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Unit Price/ಯುನಿಟ್ ಬೆಲೆ',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _addInventoryItem,
-                    child: const Text('Add Item'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('farmers')
-                  .doc(widget.farmerId)
-                  .collection('inventory')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final items = snapshot.data!.docs;
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index].data() as Map<String, dynamic>;
-                    return ListTile(
-                      title: Text(item['itemName'] ?? ''),
-                      subtitle: Text('Quantity: ${item['quantity']}'),
-                      trailing: Text('₹${item['unitPrice']}'),
-                    );
-                  },
-                );
-              },
             ),
           ],
         ),
@@ -1311,25 +1257,7 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
     );
   }
 
-  Widget _buildPricePredictionSection() {
-  return Card(
-    elevation: 4,
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Crop Price Prediction/ಬೆಳೆ ಬೆಲೆ ಮುನ್ಸೂಚನೆ',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 16),
-          PricePredictionForm(),
-        ],
-      ),
-    ),
-  );
-}
+
 
   Widget _buildFinancialForm() {
     return Column(
@@ -1558,10 +1486,6 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
              
                     const SizedBox(height: 16),
                     _buildMarketTrends(),
-                    const SizedBox(height: 16),
-                    _buildInventorySection(),
-                    const SizedBox(height: 16),
-                    _buildPricePredictionSection(),
                     const SizedBox(height: 16),
                     _buildFinancialSection(),
                   ],

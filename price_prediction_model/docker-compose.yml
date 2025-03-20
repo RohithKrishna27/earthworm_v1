@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: agri-price-prediction-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: MODEL_PATH
+        value: agricultural_avg_price_model.pkl

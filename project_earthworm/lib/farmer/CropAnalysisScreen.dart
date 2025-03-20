@@ -310,7 +310,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
   Future<void> _fetchGeminiResponse(String prompt, bool isForCrop) async {
     try {
       final response = await http.post(
-        Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCAGtWDRBB3dQf9eqiJLqAsjrUHpQB3seI"),
+        Uri.parse("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyBHZH-qGsEjnyoKDcpCM-BzfLIr9YdUJkU"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "contents": [
