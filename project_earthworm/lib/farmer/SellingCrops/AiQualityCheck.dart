@@ -224,11 +224,11 @@ class _AICropAnalysisPageState extends State<AICropAnalysisPage> {
   // Helper method to normalize the analysis result
 Map<String, dynamic> _normalizeAnalysisResult(Map<String, dynamic> raw) {
   return {
-    'Batch_Consistency': _parseDouble(raw['Batch_Consistency']) ?? 0.5,
-    'Color': _parseDouble(raw['Color']) ?? 0.5,
-    'Firmness': _parseDouble(raw['Firmness']) ?? 0.5,
-    'Shape_and_Size': _parseDouble(raw['Shape_and_Size']) ?? 0.5,
-    'Texture': _parseDouble(raw['Texture']) ?? 0.5,
+    'Batch_Consistency': _parseDouble(raw['Batch_Consistency']) ?? 0.6,
+    'Color': _parseDouble(raw['Color']) ?? 0.6,
+    'Firmness': _parseDouble(raw['Firmness']) ?? 0.6,
+    'Shape_and_Size': _parseDouble(raw['Shape_and_Size']) ?? 0.6,
+    'Texture': _parseDouble(raw['Texture']) ?? 0.6,
     'Damaged': _parseDouble(raw['Damaged']) ?? 0.3,
   };
 }
@@ -729,7 +729,11 @@ class ResultsPage extends StatelessWidget {
                           style: GoogleFonts.poppins(fontSize: 16),
                         ),
                         Text(
+<<<<<<< Updated upstream
                           '₹${formData['cropDetails']['expectedPrice']} per quintal',
+=======
+                          '₹${formData['cropDetails']['expectedPrice']} per Quintal',
+>>>>>>> Stashed changes
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -746,7 +750,7 @@ class ResultsPage extends StatelessWidget {
                           style: GoogleFonts.poppins(fontSize: 16),
                         ),
                         Text(
-                          '₹${adjustedPrice.toStringAsFixed(2)} per kg',
+                          '₹${adjustedPrice.toStringAsFixed(2)} per Quintal',
                           style: GoogleFonts.poppins(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
