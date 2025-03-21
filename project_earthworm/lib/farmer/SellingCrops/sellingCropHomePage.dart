@@ -479,10 +479,7 @@ class _SellingCropHomePageState extends State<SellingCropHomePage> {
             icon: Icon(Icons.gavel, color: Colors.white),
             label: _localizedStrings[_selectedLanguage]!['bidding_results']!,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history, color: Colors.white),
-            label: _localizedStrings[_selectedLanguage]!['order_history']!,
-          ),
+         
         ],
       ),
     );
@@ -580,15 +577,7 @@ class HomeScreen extends StatelessWidget {
               primaryColor,
               boxWidth,
               ),
-              _buildLargeFeatureBox(
-              context,
-              'AgriLoop',
-              localizedStrings['join_marketplace']!,
-              Icons.shopping_cart,
-              '/agriloop',
-              const Color.fromARGB(255, 6, 77, 158),
-              boxWidth,
-              ),
+            
               _buildLargeFeatureBox(
               context,
               'Earthworm Rise Program',
@@ -693,8 +682,7 @@ class RouteGenerator {
       case '/sell-business':
         return MaterialPageRoute(
             builder: (_) => CropDetailsForm(currentUserId: currentUserId));
-      case '/agriloop':
-        return MaterialPageRoute(builder: (_) => AgriLoopScreen());
+      
       case '/earthworm-rise':
         return MaterialPageRoute(builder: (_) => EarthwormRiseScreen());
       
