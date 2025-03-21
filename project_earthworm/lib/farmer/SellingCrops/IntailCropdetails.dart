@@ -793,7 +793,7 @@ Widget _buildCropDetailsCard() {
               decoration: textFieldDecoration.copyWith(
                 labelText: 'Expected Price per Quintal',
                 prefixIcon: Icon(Icons.currency_rupee, color: Colors.green[600]),
-                suffixText: '₹/quintal',
+                suffixText: '₹/',
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
@@ -1125,6 +1125,11 @@ Map<String, dynamic> _prepareFormData() {
   double mspPrice = mspPrices[selectedCrop!] ?? 0;
   // Calculate if price is above MSP
   bool isAboveMSP = expectedPrice >= mspPrice;
+  double enteredWeight = double.parse(_weightController.text);
+  double weightInQuintal = selectedWeightUnit == 'Kg' 
+      ? enteredWeight / 100 
+      : enteredWeight;
+
 
   return {
     'farmerDetails': {
@@ -1144,7 +1149,9 @@ Map<String, dynamic> _prepareFormData() {
     },
     'cropDetails': {
       'cropType': selectedCrop,
-      'weight': double.parse(_weightController.text),
+      'weight': weightInQuintal,
+      'originalUnit': selectedWeightUnit,
+      'originalValue': enteredWeight,
       'marketPrice': {
         'min': minPrice,
         'max': maxPrice,

@@ -88,7 +88,7 @@ class MyApp extends StatelessWidget {
       ),
       home: const ChatbotWebView(
         chatbotUrl:
-            'https://effulgent-semifreddo-39d899.netlify.app/', // Replace with your URL
+            'https://67dc80b944c68c16384abf64--jazzy-flan-92afcb.netlify.app/', // Replace with your URL
       ),
     );
   }
