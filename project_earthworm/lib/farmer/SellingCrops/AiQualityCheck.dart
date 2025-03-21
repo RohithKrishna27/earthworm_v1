@@ -700,7 +700,6 @@ class ResultsPage extends StatelessWidget {
                 ),
               ),
             ),
-            
             // Price adjustment section
             Card(
               elevation: 4,
