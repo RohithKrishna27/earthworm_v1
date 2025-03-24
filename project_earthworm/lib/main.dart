@@ -56,7 +56,8 @@ class MyApp extends StatelessWidget {
           '/map-visualization':(context) => UserNameFetcher(),
           '/crop-scheduling': (context) => CropSchedulingScreen(),
           '/crop-assistance': (context) => CropAssistanceScreen(),
-          '/sell-crops': (context) => SellingCropHomePage(),
+          '/sell-crops': (context) =>CropDetailsForm(currentUserId: currentUserId),
+               '/buyer/edit-profile': (context) => BuyerEditProfilePage(),
           '/sell-business': (context) =>
               CropDetailsForm(currentUserId: currentUserId),
                '/buyer/edit-profile': (context) => BuyerEditProfilePage(),

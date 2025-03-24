@@ -24,7 +24,7 @@ class _FarmerHomeState extends State<FarmerHome> {
   final Map<Language, Map<String, String>> _localizedStrings = {
     Language.English: {
       'welcome_back': 'Welcome Back!',
-      'farming_journey': 'Your farming journey continues here!',
+      'farming_journey': 'Welcome! Empowering Farmers with Fair Prices and Better Yields 🌾😊',
       'farmer_dashboard': 'Farmer Dashboard',
       'sell_your_crops': 'Sell Your Crops',
       'crop_assistance': 'Crop Assistance',
@@ -35,6 +35,8 @@ class _FarmerHomeState extends State<FarmerHome> {
       'logout': 'Logout',
       'learn': 'Learn Farming Practices',
       'gain_knowledge': 'Learn and gain more knowledge about farming practices',
+      'previous_orders': 'Previous Orders',
+      'bidding_results': 'Bidding Results',
     },
     Language.Kannada: {
       'welcome_back': 'ಮರುಬಳಕೆದಾರರಾಗಿ ಸ್ವಾಗತ!',
@@ -48,8 +50,9 @@ class _FarmerHomeState extends State<FarmerHome> {
       'languageLabel': 'ಭಾಷೆಯನ್ನು ಆಯ್ಕೆ ಮಾಡಿ',
       'logout': 'ಬೇರು',
       'learn': 'ಕೃಷಿ ಪದ್ಧತಿಗಳ ಬಗ್ಗೆ ತಿಳಿಯಿರಿ',
-      'gain_knowledge':
-          'ಕೃಷಿ ಪದ್ಧತಿಗಳ ಬಗ್ಗೆ ಹೆಚ್ಚಿನ ಜ್ಞಾನವನ್ನು ಕಲಿಯಿರಿ ಮತ್ತು ಪಡೆದುಕೊಳ್ಳಿ',
+      'gain_knowledge': 'ಕೃಷಿ ಪದ್ಧತಿಗಳ ಬಗ್ಗೆ ಹೆಚ್ಚಿನ ಜ್ಞಾನವನ್ನು ಕಲಿಯಿರಿ ಮತ್ತು ಪಡೆದುಕೊಳ್ಳಿ',
+      'previous_orders': 'ಹಿಂದಿನ ಆದೇಶಗಳು',
+      'bidding_results': 'ಬಿಡ್ಡಿಂಗ್ ಫಲಿತಾಂಶಗಳು',
     },
     Language.Hindi: {
       'welcome_back': 'फिर से स्वागत है!',
@@ -63,8 +66,9 @@ class _FarmerHomeState extends State<FarmerHome> {
       'languageLabel': 'भाषा चुनें',
       'logout': 'लॉग आउट',
       'learn': 'कृषि पद्धतियों के बारे में जानें',
-      'gain_knowledge':
-          'कृषि पद्धतियों के बारे में जानें और अधिक जानकारी प्राप्त करें',
+      'gain_knowledge': 'कृषि पद्धतियों के बारे में जानें और अधिक जानकारी प्राप्त करें',
+      'previous_orders': 'पिछले आदेश',
+      'bidding_results': 'बोली परिणाम',
     },
   };
 
@@ -78,7 +82,6 @@ class _FarmerHomeState extends State<FarmerHome> {
     try {
       await FirebaseAuth.instance.signOut();
       // Navigate to the login screen or home screen after logout
-      // You can replace the following line with your desired navigation
       Navigator.of(context).pushReplacementNamed('/signin');
     } catch (e) {
       // Handle errors as needed
@@ -98,18 +101,32 @@ class _FarmerHomeState extends State<FarmerHome> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: Text(_localizedStrings[_selectedLanguage]!['farmer_dashboard']!),
+        backgroundColor: Color.fromARGB(255, 70, 172, 27), // Dark green
+        elevation: 4,
         actions: [
           DropdownButton<Language>(
             value: _selectedLanguage,
+            dropdownColor: Colors.white,
+            underline: Container(
+              height: 2,
+              color: Colors.white70,
+            ),
+            icon: Icon(Icons.language, color: Colors.white),
             items: Language.values.map((Language language) {
               return DropdownMenuItem<Language>(
                 value: language,
-                child: Text(language == Language.English
-                    ? 'English'
-                    : language == Language.Kannada
-                        ? 'ಕನ್ನಡ'
-                        : 'हिन्दी'),
+                child: Text(
+                  language == Language.English
+                      ? 'English'
+                      : language == Language.Kannada
+                          ? 'ಕನ್ನಡ'
+                          : 'हिन्दी',
+                  style: TextStyle(
+                    color: const Color.fromARGB(221, 248, 246, 246),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               );
             }).toList(),
             onChanged: (Language? newValue) {
@@ -119,16 +136,19 @@ class _FarmerHomeState extends State<FarmerHome> {
             },
             hint: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child:
-                  Text(_localizedStrings[_selectedLanguage]!['languageLabel']!),
+              child: Text(
+                _localizedStrings[_selectedLanguage]!['languageLabel']!,
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
-          SizedBox(width: 16), // Add some spacing
+          SizedBox(width: 8),
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: Colors.white),
             onPressed: _logout,
             tooltip: _localizedStrings[_selectedLanguage]!['logout']!,
           ),
+          SizedBox(width: 8),
         ],
       ),
       body: _pages[_selectedIndex],
@@ -139,23 +159,19 @@ class _FarmerHomeState extends State<FarmerHome> {
         unselectedItemColor: Colors.grey,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-
+        elevation: 8,
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: _localizedStrings[_selectedLanguage]!['farmer_dashboard']!,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.track_changes),
-            label: 'Farming Calculators',
+            icon: Icon(Icons.assignment_turned_in),
+            label: _localizedStrings[_selectedLanguage]!['previous_orders']!,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chat bot',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
+            icon: Icon(Icons.gavel),
+            label: _localizedStrings[_selectedLanguage]!['bidding_results']!,
           ),
         ],
       ),
@@ -187,7 +203,7 @@ class HomeScreen extends StatelessWidget {
               SizedBox(height: 24),
               // Welcome Header with enhanced styling
               Container(
-                padding: EdgeInsets.all(16),
+                padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -196,27 +212,47 @@ class HomeScreen extends StatelessWidget {
                       color: Colors.green.withOpacity(0.1),
                       spreadRadius: 2,
                       blurRadius: 10,
-                      offset: Offset(0, 3),
+                      offset: Offset(0, 5),
                     ),
                   ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      localizedStrings['welcome_back']!,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: secondaryGreen,
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: primaryGreen.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.eco,
+                            color: primaryGreen,
+                            size: 28,
+                          ),
+                        ),
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            localizedStrings['welcome_back']!,
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: secondaryGreen,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: 16),
                     Text(
                       localizedStrings['farming_journey']!,
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 16,
+                        height: 1.4,
                       ),
                     ),
                   ],
@@ -243,26 +279,7 @@ class HomeScreen extends StatelessWidget {
                 '/sell-crops',
                 Color(0xFF43A047), // Slightly darker green
                 boxWidth,
-              ),
-
-              _buildLargeFeatureBox(
-                context,
-                localizedStrings['crop_assistance']!,
-                localizedStrings['get_advice']!,
-                Icons.eco,
-                '/crop-assistance',
-                Color(0xFF2E7D32), // Darkest green
-                boxWidth,
-              ),
-              _buildLargeFeatureBox(
-                context,
-                localizedStrings['learn']!,
-                localizedStrings['gain_knowledge']!,
-                Icons.eco,
-                '/learn-home',
-                Color.fromARGB(255, 1, 96, 6), // Darkest green
-                boxWidth,
-              ),
+              )
             ],
           ),
         ),
@@ -314,10 +331,17 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     Spacer(),
-                    Icon(
-                      Icons.arrow_forward,
-                      color: Colors.white,
-                      size: 24,
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                     ),
                   ],
                 ),
@@ -336,6 +360,7 @@ class HomeScreen extends StatelessWidget {
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 16,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -347,7 +372,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// Route generator and other screens remain the same as previous implementation
+// Route generator and other screens
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -361,6 +386,10 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => CropAssistanceScreen());
       case '/insurance':
         return MaterialPageRoute(builder: (_) => FarmerInsuranceSignup());
+      case '/previous-orders':
+        return MaterialPageRoute(builder: (_) => PreviousOrdersScreen());
+      case '/bidding-results':
+        return MaterialPageRoute(builder: (_) => BiddingResultsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -394,6 +423,33 @@ class SellCropsScreen extends StatelessWidget {
         backgroundColor: Color(0xFF43A047),
       ),
       body: Center(child: Text('Sell Crops Content')),
+    );
+  }
+}
+
+// Add new screens for Previous Orders and Bidding Results
+class PreviousOrdersScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Previous Orders'),
+        backgroundColor: Color(0xFF2E7D32),
+      ),
+      body: Center(child: Text('Previous Orders Content')),
+    );
+  }
+}
+
+class BiddingResultsScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Bidding Results'),
+        backgroundColor: Color(0xFF1B5E20),
+      ),
+      body: Center(child: Text('Bidding Results Content')),
     );
   }
 }
