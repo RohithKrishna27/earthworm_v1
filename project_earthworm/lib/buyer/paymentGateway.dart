@@ -3,15 +3,16 @@ import 'package:intl/intl.dart';
 import 'package:confetti/confetti.dart';
 import 'dart:math';
 import 'package:vibration/vibration.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PaymentSlider extends StatefulWidget {
   final double amount;
-  //final VoidCallback onPaymentComplete;
+  final VoidCallback onPaymentComplete;
 
   const PaymentSlider({
     Key? key,
     required this.amount,
-    //required this.onPaymentComplete,
+    required this.onPaymentComplete,
   }) : super(key: key);
 
   @override
@@ -66,7 +67,9 @@ class _PaymentSliderState extends State<PaymentSlider>
 
       _checkmarkController.forward();
       _confettiController.play();
-      //widget.onPaymentComplete.call();
+      
+      // Call the provided callback to indicate payment completion
+      widget.onPaymentComplete();
     }
   }
 
@@ -202,23 +205,89 @@ class _PaymentSliderState extends State<PaymentSlider>
   }
 }
 
-class PaymentPage extends StatelessWidget {
+class PaymentPage extends StatefulWidget {
   final double amount;
   final bool isSupport;
   final String cropName;
   final String farmerName;
   final String farmerPhone;
+  final String docId;
 
-  PaymentPage({
+  const PaymentPage({
     Key? key,
     required this.amount,
     required this.isSupport,
     required this.cropName,
     required this.farmerName,
     required this.farmerPhone,
+    required this.docId,
   }) : super(key: key);
 
+  @override
+  _PaymentPageState createState() => _PaymentPageState();
+}
+
+class _PaymentPageState extends State<PaymentPage> {
   final NumberFormat _formatter = NumberFormat('#,##0.00', 'en_US');
+  bool _isPaymentProcessing = false;
+
+  void _handlePaymentComplete() async {
+    if (_isPaymentProcessing) return;
+
+    setState(() {
+      _isPaymentProcessing = true;
+    });
+
+    try {
+      // Update the order status in Firestore
+      await FirebaseFirestore.instance
+          .collection('order')
+          .doc(widget.docId)
+          .update({
+        'status': 'approved',
+        'paymentConfirmedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Show success dialog
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Payment Successful'),
+          content: Text('You have successfully purchased ${widget.cropName}.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop(true); // Return to previous screen with success
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      // Show error dialog
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Payment Error'),
+          content: Text('Failed to update order status: $e'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      setState(() {
+        _isPaymentProcessing = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -237,8 +306,8 @@ class PaymentPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            Text('Farmer Name: $farmerName'),
-            Text('Phone: $farmerPhone'),
+            Text('Farmer Name: ${widget.farmerName}'),
+            Text('Phone: ${widget.farmerPhone}'),
             const SizedBox(height: 20),
 
             const Text(
@@ -249,9 +318,9 @@ class PaymentPage extends StatelessWidget {
             Card(
               elevation: 3,
               child: ListTile(
-                title: Text(cropName),
-                subtitle: Text(isSupport ? 'Support Payment' : 'Crop Payment'),
-                trailing: Text('₹${_formatter.format(amount)}'),
+                title: Text(widget.cropName),
+                subtitle: Text(widget.isSupport ? 'Support Payment' : 'Crop Payment'),
+                trailing: Text('₹${_formatter.format(widget.amount)}'),
               ),
             ),
             const SizedBox(height: 20),
@@ -343,7 +412,8 @@ class PaymentPage extends StatelessWidget {
             // Payment Slider
             Center(
               child: PaymentSlider(
-                amount: amount,
+                amount: widget.amount,
+                onPaymentComplete: _handlePaymentComplete,
               ),
             ),
           ],

@@ -46,10 +46,6 @@ class OrderStatusPage extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 2);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Order Status'),
-        backgroundColor: const Color(0xFF1E88E5),
-      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('order')

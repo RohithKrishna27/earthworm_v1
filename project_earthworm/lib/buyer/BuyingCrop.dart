@@ -679,20 +679,96 @@ class _DetailedCropViewState extends State<DetailedCropView> {
     );
   }
 
-  void _proceedToPayment(double amount, bool isSupport) {
-    Navigator.pop(context); // Close the dialog
-    Navigator.push(
+void _proceedToPayment(double amount, bool isSupport) async {
+  try {
+    // Debug: Print entire widget.data to see its structure
+    print('Full widget data: ${widget.data}');
+
+    // Prioritize different possible ways to extract the document ID
+    String docId = '';
+    
+    // Check various paths to extract docId
+    if (widget.data.containsKey('docId')) {
+      docId = widget.data['docId'];
+      print('DocId found from docId key: $docId');
+    } else if (widget.data.containsKey('id')) {
+      docId = widget.data['id'];
+      print('DocId found from id key: $docId');
+    } else {
+      // If no docId is found, try to find the document in Firestore
+      try {
+        // Assuming you have unique identifiers like cropType, farmerName, etc.
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('order')
+            .where('cropType', isEqualTo: widget.data['cropType'])
+            .where('farmerName', isEqualTo: widget.data['farmerName'])
+            .where('status', isEqualTo: 'pending')
+            .limit(1)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          docId = querySnapshot.docs.first.id;
+          print('DocId found through query: $docId');
+        }
+      } catch (queryError) {
+        print('Error querying for document: $queryError');
+      }
+    }
+
+    // Absolute last resort fallback
+    if (docId.isEmpty) {
+      print('WARNING: Could not find a valid document ID');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error: Unable to identify the specific order'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PaymentPage(
           amount: amount,
           isSupport: isSupport,
-          cropName: widget.data['cropType'] ?? 'Unknown Crop', // Crop name
-          farmerName:
-              widget.data['farmerName'] ?? 'Unknown Farmer', // Farmer name
-          farmerPhone: widget.data['farmerPhone'] ?? '', // Farmer phone number
+          cropName: widget.data['cropType'] ?? 'Unknown Crop',
+          farmerName: widget.data['farmerName'] ?? 'Unknown Farmer',
+          farmerPhone: widget.data['farmerPhone'] ?? '',
+          docId: docId, // Pass the extracted docId
         ),
       ),
     );
+
+    // Check if payment was successful
+    if (result == true) {
+      // Update the order status in Firestore
+      await FirebaseFirestore.instance
+          .collection('order')
+          .doc(docId)
+          .update({
+        'status': 'approved',
+        'paymentConfirmedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Optional: Show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Order successfully approved!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  } catch (e) {
+    // Comprehensive error handling
+    print('Complete error details: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error processing order: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 }

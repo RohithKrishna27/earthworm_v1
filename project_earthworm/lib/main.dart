@@ -22,12 +22,16 @@ import 'farmer/crop_scheduling/crop_scheduling.dart';
 import 'farmer/crop_scheduling/advanced/todo.dart';
 import 'package:project_earthworm/farmer/CropAnalysisScreen.dart';
 import 'package:project_earthworm/rise.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(MyApp());
 }      
+
+final currentUserId =
+    FirebaseAuth.instance.currentUser?.uid ?? ''; 
 
 class MyApp extends StatelessWidget {
   @override
@@ -64,6 +68,8 @@ class MyApp extends StatelessWidget {
           '/learn-home': (context) => TodoPage(),
           '/buyer/browse-crops': (context) => BuyerFeedPage(),
           '/earthworm-rise' : (context) => Earthwormrise(),
+          // '/previous-orders' : (context) => PreviousOrdersScreen(),
+          // '/bidding-results' : (context) => BiddingResultsScreen(),
         },
       ),
     );

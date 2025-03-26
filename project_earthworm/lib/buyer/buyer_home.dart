@@ -194,7 +194,7 @@ class _BuyerHomeState extends State<BuyerHome> {
             BottomNavigationBarItem(
               icon: Icon(Icons.gavel_outlined),
               activeIcon: Icon(Icons.gavel),
-              label: 'Auctions',
+              label: 'Orders',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.emoji_events_outlined),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:project_earthworm/farmer/CropAssistanceScreen.dart';
-import 'package:project_earthworm/farmer/calculator/calculator_home.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
 import 'insurance_signup.dart';
-import "package:project_earthworm/buyer/chatboat.dart";
-import 'package:project_earthworm/farmer/crop_scheduling/advanced/todo.dart';
+import 'package:project_earthworm/farmer/SellingCrops/sellingCropHomePage.dart';
+import 'package:project_earthworm/farmer/SellingCrops/SellCropBusiness/orderStatus.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum Language { English, Kannada, Hindi }
 
@@ -89,14 +89,14 @@ class _FarmerHomeState extends State<FarmerHome> {
     }
   }
 
+   
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
       HomeScreen(localizedStrings: _localizedStrings[_selectedLanguage]!),
-      CalculatorHomeScreen(),
-      const ChatbotWebView(
-          chatbotUrl: "https://effulgent-semifreddo-39d899.netlify.app/"),
-      TodoPage(),
+      OrderStatusPage(),
+      BiddingResultsPage(),
     ];
 
     return Scaffold(
@@ -387,9 +387,9 @@ class RouteGenerator {
       case '/insurance':
         return MaterialPageRoute(builder: (_) => FarmerInsuranceSignup());
       case '/previous-orders':
-        return MaterialPageRoute(builder: (_) => PreviousOrdersScreen());
-      case '/bidding-results':
-        return MaterialPageRoute(builder: (_) => BiddingResultsScreen());
+        return MaterialPageRoute(builder: (_) => OrderStatusPage());
+      // case '/bidding-results':
+      //   return MaterialPageRoute(builder: (_) => FarmerAuctionStatusPage());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
@@ -427,29 +427,3 @@ class SellCropsScreen extends StatelessWidget {
   }
 }
 
-// Add new screens for Previous Orders and Bidding Results
-class PreviousOrdersScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Previous Orders'),
-        backgroundColor: Color(0xFF2E7D32),
-      ),
-      body: Center(child: Text('Previous Orders Content')),
-    );
-  }
-}
-
-class BiddingResultsScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Bidding Results'),
-        backgroundColor: Color(0xFF1B5E20),
-      ),
-      body: Center(child: Text('Bidding Results Content')),
-    );
-  }
-}
