@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:just_audio/just_audio.dart';
-import 'dart:async';  // Add this for Completer and StreamSubscription
-
+import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
 
 enum Language { English, Kannada, Hindi }
 
@@ -22,7 +22,71 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
   bool _isPlayingCrop = false;
   bool _isPlayingVariety = false;
 
-  // Define translations for the texts
+  // Firebase Realtime Database reference (updated to point to sensorData)
+  final DatabaseReference _database = FirebaseDatabase.instance.ref('sensorData');
+
+  // Text controllers
+  final TextEditingController _nController = TextEditingController();
+  final TextEditingController _pController = TextEditingController();
+  final TextEditingController _kController = TextEditingController();
+  final TextEditingController _temperatureController = TextEditingController();
+  final TextEditingController _humidityController = TextEditingController();
+  final TextEditingController _phController = TextEditingController();
+  final TextEditingController _rainfallController = TextEditingController();
+
+  String _selectedCrop = 'Rice';
+  String _selectedState = 'Punjab';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDataFromFirebase(); // Fetch data when the screen loads
+  }
+
+  // Fetch data from Firebase Realtime Database and autofill fields
+  Future<void> _fetchDataFromFirebase() async {
+    try {
+      final snapshot = await _database.once();
+      if (snapshot.snapshot.value != null) {
+        final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+        setState(() {
+          _nController.text = data['Nitrogen']?.toString() ?? '0';
+          _pController.text = data['phosphorus']?.toString() ?? '0';
+          _kController.text = data['potassium']?.toString() ?? '0';
+          _temperatureController.text = data['temperature']?.toString() ?? '0';
+          _humidityController.text = data['moisture']?.toString() ?? '0'; // Map moisture to humidity
+          _phController.text = data['ph']?.toString() ?? '0'; // Default to 0 if not present
+          _rainfallController.text = data['rainfall']?.toString() ?? '0'; // Default to 0 if not present
+        });
+      } else {
+        print('No data available in Firebase.');
+        setState(() {
+          // Set default values if no data is found
+          _nController.text = '0';
+          _pController.text = '0';
+          _kController.text = '0';
+          _temperatureController.text = '0';
+          _humidityController.text = '0';
+          _phController.text = '0';
+          _rainfallController.text = '0';
+        });
+      }
+    } catch (e) {
+      print('Error fetching data from Firebase: $e');
+      setState(() {
+        // Set default values on error
+        _nController.text = '0';
+        _pController.text = '0';
+        _kController.text = '0';
+        _temperatureController.text = '0';
+        _humidityController.text = '0';
+        _phController.text = '0';
+        _rainfallController.text = '0';
+      });
+    }
+  }
+
+  // Rest of your existing code (unchanged)
   final Map<Language, Map<String, String>> _localizedStrings = {
     Language.English: {
       'ai_crop_suggestion': 'AI Crop Suggestion',
@@ -86,17 +150,6 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
     },
   };
 
-  final TextEditingController _nController = TextEditingController();
-  final TextEditingController _pController = TextEditingController();
-  final TextEditingController _kController = TextEditingController();
-  final TextEditingController _temperatureController = TextEditingController();
-  final TextEditingController _humidityController = TextEditingController();
-  final TextEditingController _phController = TextEditingController();
-  final TextEditingController _rainfallController = TextEditingController();
-
-  String _selectedCrop = 'Rice';
-  String _selectedState = 'Punjab';
-
   @override
   void dispose() {
     _audioPlayer.dispose();
@@ -111,54 +164,40 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
   }
 
   Future<void> _textToSpeech(String text, bool isForCrop) async {
-    // Split text into chunks of approximately 4800 bytes (leaving buffer for encoding)
     List<String> chunks = _splitTextIntoChunks(text);
-    
     try {
       setState(() {
-        if (isForCrop) {
-          _isPlayingCrop = true;
-        } else {
-          _isPlayingVariety = true;
-        }
+        if (isForCrop) _isPlayingCrop = true;
+        else _isPlayingVariety = true;
       });
-
-      // Play each chunk sequentially
       for (String chunk in chunks) {
-        if (!(isForCrop ? _isPlayingCrop : _isPlayingVariety)) {
-          break; // Stop if play state has changed
-        }
-
+        if (!(isForCrop ? _isPlayingCrop : _isPlayingVariety)) break;
         final response = await http.post(
           Uri.parse('https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyDBXE3N7aHSOfpxgV9qVNXsy0F20MfsXIg'),
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: {'Content-Type': 'application/json'},
           body: json.encode({
             'input': {'text': chunk},
             'voice': {
-              'languageCode': _selectedLanguage == Language.Hindi ? 'hi-IN' :
-                            _selectedLanguage == Language.Kannada ? 'kn-IN' : 'en-US',
-              'name': _selectedLanguage == Language.Hindi ? 'hi-IN-Wavenet-C' :
-                      _selectedLanguage == Language.Kannada ? 'kn-IN-Wavenet-A' : 'en-US-Wavenet-D',
+              'languageCode': _selectedLanguage == Language.Hindi
+                  ? 'hi-IN'
+                  : _selectedLanguage == Language.Kannada
+                      ? 'kn-IN'
+                      : 'en-US',
+              'name': _selectedLanguage == Language.Hindi
+                  ? 'hi-IN-Wavenet-C'
+                  : _selectedLanguage == Language.Kannada
+                      ? 'kn-IN-Wavenet-A'
+                      : 'en-US-Wavenet-D',
             },
-            'audioConfig': {
-              'audioEncoding': 'MP3',
-              'pitch': 0,
-              'speakingRate': 1,
-            },
+            'audioConfig': {'audioEncoding': 'MP3', 'pitch': 0, 'speakingRate': 1},
           }),
         );
-
         if (response.statusCode == 200) {
           final audioContent = json.decode(response.body)['audioContent'];
           final audioBytes = base64.decode(audioContent);
           final audioUrl = Uri.dataFromBytes(audioBytes, mimeType: 'audio/mp3').toString();
-
           await _audioPlayer.setUrl(audioUrl);
           await _audioPlayer.play();
-          
-          // Wait for the current chunk to finish playing
           await _waitForCompletion();
         } else {
           print('Failed to convert chunk to speech: ${response.body}');
@@ -169,67 +208,52 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
       print('Error in text to speech: $e');
     } finally {
       setState(() {
-        if (isForCrop) {
-          _isPlayingCrop = false;
-        } else {
-          _isPlayingVariety = false;
-        }
+        if (isForCrop) _isPlayingCrop = false;
+        else _isPlayingVariety = false;
       });
     }
   }
 
   Future<void> _waitForCompletion() async {
     Completer<void> completer = Completer<void>();
-    
     StreamSubscription? subscription;
     subscription = _audioPlayer.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
-        subscription?.cancel();
-        if (!completer.isCompleted) {
-          completer.complete();
-        }
+        subscription
+
+?.cancel();
+        if (!completer.isCompleted) completer.complete();
       }
     });
-
     await completer.future;
   }
 
   List<String> _splitTextIntoChunks(String text) {
     List<String> chunks = [];
-    const int maxBytes = 4800; // Buffer for encoding overhead
-    
+    const int maxBytes = 4800;
     while (text.isNotEmpty) {
       String chunk = text;
-      
-      // If text is longer than max bytes, find a good breaking point
       if (text.length > maxBytes) {
         chunk = text.substring(0, maxBytes);
-        
-        // Try to break at sentence end
         int lastPeriod = chunk.lastIndexOf('. ');
         if (lastPeriod != -1) {
           chunk = text.substring(0, lastPeriod + 1);
         } else {
-          // If no sentence break, try to break at comma
           int lastComma = chunk.lastIndexOf(', ');
           if (lastComma != -1) {
             chunk = text.substring(0, lastComma + 1);
           } else {
-            // If no comma, break at last space
             int lastSpace = chunk.lastIndexOf(' ');
-            if (lastSpace != -1) {
-              chunk = text.substring(0, lastSpace);
-            }
+            if (lastSpace != -1) chunk = text.substring(0, lastSpace);
           }
         }
       }
-      
       chunks.add(chunk);
       text = text.substring(chunk.length).trim();
     }
-    
     return chunks;
   }
+
   Future<void> _fetchAICropSuggestion() async {
     try {
       final response = await http.post(
@@ -245,7 +269,6 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
           "rainfall": double.tryParse(_rainfallController.text) ?? 0,
         }),
       );
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         setState(() {
@@ -276,7 +299,6 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
       final response = await http.get(
         Uri.parse("https://seed-varities.onrender.com/advanced-search?crop_type=$_selectedCrop&state=$_selectedState"),
       );
-
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -322,16 +344,12 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
           ]
         }),
       );
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         setState(() {
           String geminiResponse = responseData['candidates']?[0]['content']?['parts']?[0]['text'] ?? "No additional information found.";
-          if (isForCrop) {
-            _geminiResponseForCrop = geminiResponse;
-          } else {
-            _geminiResponseForVariety = geminiResponse;
-          }
+          if (isForCrop) _geminiResponseForCrop = geminiResponse;
+          else _geminiResponseForVariety = geminiResponse;
         });
       } else {
         setState(() {
@@ -344,21 +362,14 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
       }
     } catch (e) {
       setState(() {
-        if (isForCrop) {
-          _geminiResponseForCrop = "Error fetching Gemini response: $e";
-        } else {
-          _geminiResponseForVariety = "Error fetching Gemini response: $e";
-        }
+        if (isForCrop) _geminiResponseForCrop = "Error fetching Gemini response: $e";
+        else _geminiResponseForVariety = "Error fetching Gemini response: $e";
       });
     }
   }
 
   void _switchLanguage(Language? newLanguage) {
-    if (newLanguage != null) {
-      setState(() {
-        _selectedLanguage = newLanguage;
-      });
-    }
+    if (newLanguage != null) setState(() => _selectedLanguage = newLanguage);
   }
 
   Widget _buildGeminiResponse(String response, bool isForCrop) {
@@ -366,33 +377,23 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          response.isEmpty ? 
-            "No details from Gemini." : 
-            response,
+          response.isEmpty ? "No details from Gemini." : response,
           style: TextStyle(fontSize: 16),
         ),
         if (response.isNotEmpty)
           ElevatedButton.icon(
-            onPressed: isForCrop && _isPlayingCrop || !isForCrop && _isPlayingVariety ?
-              () => _audioPlayer.stop() :
-              () => _textToSpeech(response, isForCrop),
-            icon: Icon(
-              isForCrop && _isPlayingCrop || !isForCrop && _isPlayingVariety ?
-                Icons.stop : Icons.play_arrow
-            ),
-            label: Text(
-              isForCrop && _isPlayingCrop || !isForCrop && _isPlayingVariety ?
-                'Stop' : 'Listen'
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF66BB6A),
-              foregroundColor: Colors.white,
-            ),
+            onPressed: isForCrop && _isPlayingCrop || !isForCrop && _isPlayingVariety
+                ? () => _audioPlayer.stop()
+                : () => _textToSpeech(response, isForCrop),
+            icon: Icon(isForCrop && _isPlayingCrop || !isForCrop && _isPlayingVariety ? Icons.stop : Icons.play_arrow),
+            label: Text(isForCrop && _isPlayingCrop || !isForCrop && _isPlayingVariety ? 'Stop' : 'Listen'),
+            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF66BB6A), foregroundColor: Colors.white),
           ),
       ],
     );
   }
-@override
+
+  @override
   Widget build(BuildContext context) {
     final Color primaryGreen = Color(0xFF66BB6A);
     final Color secondaryGreen = Color(0xFF1B5E20);
@@ -410,10 +411,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
             items: Language.values.map((Language language) {
               return DropdownMenuItem<Language>(
                 value: language,
-                child: Text(
-                  language.toString().split('.').last,
-                  style: TextStyle(color: Colors.black),
-                ),
+                child: Text(language.toString().split('.').last, style: TextStyle(color: Colors.black)),
               );
             }).toList(),
             onChanged: _switchLanguage,
@@ -428,19 +426,13 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 24),
-              // AI Crop Suggestion Section
               Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.green.withOpacity(0.1),
-                      spreadRadius: 2,
-                      blurRadius: 10,
-                      offset: Offset(0, 3),
-                    ),
+                    BoxShadow(color: Colors.green.withOpacity(0.1), spreadRadius: 2, blurRadius: 10, offset: Offset(0, 3)),
                   ],
                 ),
                 child: Column(
@@ -448,11 +440,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
                   children: [
                     Text(
                       _localizedStrings[_selectedLanguage]!['ai_crop_suggestion']!,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: secondaryGreen,
-                      ),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: secondaryGreen),
                     ),
                     SizedBox(height: 16),
                     TextField(
@@ -520,10 +508,7 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
                     SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _fetchAICropSuggestion,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryGreen,
-                        minimumSize: Size(double.infinity, 50),
-                      ),
+                      style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, minimumSize: Size(double.infinity, 50)),
                       child: Text(
                         _localizedStrings[_selectedLanguage]!['get_suggestion']!,
                         style: TextStyle(color: Colors.white, fontSize: 16),
@@ -540,19 +525,13 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
                 ),
               ),
               SizedBox(height: 32),
-              // Seed Variety Analyzer Section
               Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.green.withOpacity(0.1),
-                      spreadRadius: 2,
-                      blurRadius: 10,
-                      offset: Offset(0, 3),
-                    ),
+                    BoxShadow(color: Colors.green.withOpacity(0.1), spreadRadius: 2, blurRadius: 10, offset: Offset(0, 3)),
                   ],
                 ),
                 child: Column(
@@ -560,69 +539,45 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
                   children: [
                     Text(
                       _localizedStrings[_selectedLanguage]!['seed_variety_analyzer']!,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: secondaryGreen,
-                      ),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: secondaryGreen),
                     ),
                     SizedBox(height: 16),
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                      decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(4)),
                       child: DropdownButton<String>(
                         value: _selectedCrop,
                         isExpanded: true,
-                        items: ['Rice', 'Maize', 'Wheat', 'Groundnut', 'Cotton', 'Sugar-Cane']
-                            .map((String crop) {
-                          return DropdownMenuItem<String>(
-                            value: crop,
-                            child: Text(crop),
-                          );
+                        items: ['Rice', 'Maize', 'Wheat', 'Groundnut', 'Cotton', 'Sugar-Cane'].map((String crop) {
+                          return DropdownMenuItem<String>(value: crop, child: Text(crop));
                         }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedCrop = newValue!;
-                          });
-                        },
+                        onChanged: (String? newValue) => setState(() => _selectedCrop = newValue!),
                         hint: Text(_localizedStrings[_selectedLanguage]!['crop_name']!),
                       ),
                     ),
                     SizedBox(height: 16),
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                      decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(4)),
                       child: DropdownButton<String>(
                         value: _selectedState,
                         isExpanded: true,
-                        items: ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal']
-                            .map((String state) {
-                          return DropdownMenuItem<String>(
-                            value: state,
-                            child: Text(state),
-                          );
+                        items: [
+                          'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
+                          'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur',
+                          'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+                          'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+                        ].map((String state) {
+                          return DropdownMenuItem<String>(value: state, child: Text(state));
                         }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedState = newValue!;
-                          });
-                        },
+                        onChanged: (String? newValue) => setState(() => _selectedState = newValue!),
                         hint: Text(_localizedStrings[_selectedLanguage]!['state']!),
                       ),
                     ),
                     SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _fetchSeedVarietyDetails,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryGreen,
-                        minimumSize: Size(double.infinity, 50),
-                      ),
+                      style: ElevatedButton.styleFrom(backgroundColor: primaryGreen, minimumSize: Size(double.infinity, 50)),
                       child: Text(
                         _localizedStrings[_selectedLanguage]!['search']!,
                         style: TextStyle(color: Colors.white, fontSize: 16),
@@ -644,4 +599,5 @@ class _CropAnalysisScreenState extends State<CropAnalysisScreen> {
         ),
       ),
     );
-  }}
+  }
+}

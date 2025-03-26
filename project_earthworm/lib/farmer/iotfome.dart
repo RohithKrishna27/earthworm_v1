@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:project_earthworm/farmer/CropAnalysisScreen.dart';
 
 class Language {
   static const String english = 'en';
@@ -20,7 +21,7 @@ class _KhrishiMitraHomeState extends State<KhrishiMitraHome> {
       'title': 'Khrishi Mitra',
       'welcome': 'Welcome to Khrishi Mitra',
       'select': 'Select an option:',
-      'microclimate': 'Microclimate Weather of your Farm Land',
+      'microclimate': 'Microclimate Weather of Your Farm Land',
       'crop_suggestion': 'Crop Suggestion',
       'npk_values': 'NPK Values',
       'irrigation': 'Irrigation and Important Alerts',
@@ -102,15 +103,24 @@ class _KhrishiMitraHomeState extends State<KhrishiMitraHome> {
               title: _languageTexts[_currentLanguage]!['microclimate']!,
               icon: Icons.cloud,
               onTap: () {
-                // Navigate to Microclimate Weather screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CropAnalysisScreen(),
+                  ),
+                );
               },
             ),
             OptionButton(
               title: _languageTexts[_currentLanguage]!['crop_suggestion']!,
               icon: Icons.grass,
               onTap: () {
-                // Navigate to Crop Suggestion screen
-              },
+Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CropAnalysisScreen(),
+                  ),
+                );              },
             ),
             OptionButton(
               title: _languageTexts[_currentLanguage]!['npk_values']!,
