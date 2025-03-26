@@ -10,6 +10,7 @@ import 'package:project_earthworm/farmer/SellingCrops/orderSummay.dart';
 import 'package:project_earthworm/farmer/SellingCrops/sellingCropHomePage.dart';
 import 'package:project_earthworm/buyer/edit_profile.dart';
 import 'package:project_earthworm/farmer/farmerdashboard.dart';
+import 'package:project_earthworm/farmer/iotfome.dart';
 import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'package:project_earthworm/buyer/buyer_home.dart';
@@ -68,6 +69,7 @@ class MyApp extends StatelessWidget {
           '/learn-home': (context) => TodoPage(),
           '/buyer/browse-crops': (context) => BuyerFeedPage(),
           '/earthworm-rise' : (context) => Earthwormrise(),
+          '/khrishi-iot' : (contest) => KhrishiMitraHome()
           // '/previous-orders' : (context) => PreviousOrdersScreen(),
           // '/bidding-results' : (context) => BiddingResultsScreen(),
         },

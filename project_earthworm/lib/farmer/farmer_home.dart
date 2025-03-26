@@ -25,7 +25,7 @@ class _FarmerHomeState extends State<FarmerHome> {
     Language.English: {
       'welcome_back': 'Welcome Back!',
       'farming_journey': 'Welcome! Empowering Farmers with Fair Prices and Better Yields 🌾😊',
-      'farmer_dashboard': 'Farmer Dashboard',
+      'farmer_dashboard': 'Krishi Mitra',
       'sell_your_crops': 'Sell Your Crops',
       'crop_assistance': 'Crop Assistance',
       'track_activities': 'Track and manage your farm activities',
@@ -37,11 +37,12 @@ class _FarmerHomeState extends State<FarmerHome> {
       'gain_knowledge': 'Learn and gain more knowledge about farming practices',
       'previous_orders': 'Previous Orders',
       'bidding_results': 'Bidding Results',
+      'Profile _&_Trends' : 'Profile and Trends'
     },
     Language.Kannada: {
       'welcome_back': 'ಮರುಬಳಕೆದಾರರಾಗಿ ಸ್ವಾಗತ!',
       'farming_journey': 'ನಿಮ್ಮ ಕೃಷಿ ಪಯಣವು ಇಲ್ಲಿ ಮುಂದುವರಿಯುತ್ತದೆ!',
-      'farmer_dashboard': 'ಕೃಷಕಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್',
+      'farmer_dashboard': 'ಕೃಷಿ ಮಿತ್ರ',
       'sell_your_crops': 'ನಿಮ್ಮ ಬೆಳೆಗಳನ್ನು ಮಾರಾಟ ಮಾಡಿ',
       'crop_assistance': 'ಬೆಳೆ ಸಹಾಯ',
       'track_activities': 'ನಿಮ್ಮ ಕೃಷಿ ಚಟುವಟಿಕೆಗಳನ್ನು ಟ್ರ್ಯಾಕ್ ಮತ್ತು ನಿರ್ವಹಿಸಿ',
@@ -53,11 +54,13 @@ class _FarmerHomeState extends State<FarmerHome> {
       'gain_knowledge': 'ಕೃಷಿ ಪದ್ಧತಿಗಳ ಬಗ್ಗೆ ಹೆಚ್ಚಿನ ಜ್ಞಾನವನ್ನು ಕಲಿಯಿರಿ ಮತ್ತು ಪಡೆದುಕೊಳ್ಳಿ',
       'previous_orders': 'ಹಿಂದಿನ ಆದೇಶಗಳು',
       'bidding_results': 'ಬಿಡ್ಡಿಂಗ್ ಫಲಿತಾಂಶಗಳು',
+            'Profile _&_Trends' : 'ಪ್ರೊಫೈಲ್ & ಪ್ರವೇ'
+
     },
     Language.Hindi: {
       'welcome_back': 'फिर से स्वागत है!',
       'farming_journey': 'आपकी खेती की यात्रा यहां जारी है!',
-      'farmer_dashboard': 'किसान डैशबोर्ड',
+      'farmer_dashboard': 'कृषि मित्र',
       'sell_your_crops': 'अपनी फसलें बेचे',
       'crop_assistance': 'फसल सहायता',
       'track_activities': 'अपने खेत की गतिविधियों को ट्रैक और प्रबंधित करें',
@@ -69,6 +72,8 @@ class _FarmerHomeState extends State<FarmerHome> {
       'gain_knowledge': 'कृषि पद्धतियों के बारे में जानें और अधिक जानकारी प्राप्त करें',
       'previous_orders': 'पिछले आदेश',
       'bidding_results': 'बोली परिणाम',
+            'Profile _&_Trends' : 'रोफाइल & रु'
+
     },
   };
 
@@ -97,22 +102,23 @@ class _FarmerHomeState extends State<FarmerHome> {
       HomeScreen(localizedStrings: _localizedStrings[_selectedLanguage]!),
       OrderStatusPage(),
       BiddingResultsPage(),
+      OnboardingScreen()
     ];
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_localizedStrings[_selectedLanguage]!['farmer_dashboard']!),
-        backgroundColor: Color.fromARGB(255, 70, 172, 27), // Dark green
+        backgroundColor: Color.fromARGB(255, 242, 243, 242), // Dark green
         elevation: 4,
         actions: [
           DropdownButton<Language>(
             value: _selectedLanguage,
-            dropdownColor: Colors.white,
+            dropdownColor: const Color.fromARGB(255, 6, 6, 6),
             underline: Container(
               height: 2,
-              color: Colors.white70,
+              color: const Color.fromARGB(179, 21, 20, 20),
             ),
-            icon: Icon(Icons.language, color: Colors.white),
+            icon: Icon(Icons.language, color: const Color.fromARGB(255, 8, 8, 8)),
             items: Language.values.map((Language language) {
               return DropdownMenuItem<Language>(
                 value: language,
@@ -123,7 +129,7 @@ class _FarmerHomeState extends State<FarmerHome> {
                           ? 'ಕನ್ನಡ'
                           : 'हिन्दी',
                   style: TextStyle(
-                    color: const Color.fromARGB(221, 248, 246, 246),
+                    color: const Color.fromARGB(221, 19, 18, 18),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -172,6 +178,10 @@ class _FarmerHomeState extends State<FarmerHome> {
           BottomNavigationBarItem(
             icon: Icon(Icons.gavel),
             label: _localizedStrings[_selectedLanguage]!['bidding_results']!,
+          ),
+           BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: _localizedStrings[_selectedLanguage]!['Profile _&_Trends'],
           ),
         ],
       ),
@@ -266,7 +276,7 @@ class HomeScreen extends StatelessWidget {
                 localizedStrings['farmer_dashboard']!,
                 localizedStrings['track_activities']!,
                 Icons.dashboard,
-                '/dashboard',
+                '/khrishi-iot',
                 Color(0xFF66BB6A), // Vibrant green
                 boxWidth,
               ),
@@ -388,8 +398,7 @@ class RouteGenerator {
         return MaterialPageRoute(builder: (_) => FarmerInsuranceSignup());
       case '/previous-orders':
         return MaterialPageRoute(builder: (_) => OrderStatusPage());
-      // case '/bidding-results':
-      //   return MaterialPageRoute(builder: (_) => FarmerAuctionStatusPage());
+      
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

@@ -875,93 +875,93 @@ class _FarmerDashboardState extends State<FarmerDashboard> {
     return 0.0;
   }
 
-  Widget _buildWeatherSection() {
-    if (_weatherData == null) {
-      return const Card(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text('Weather data unavailable'),
-        ),
-      );
-    }
+  // Widget _buildWeatherSection() {
+  //   if (_weatherData == null) {
+  //     return const Card(
+  //       child: Padding(
+  //         padding: EdgeInsets.all(16.0),
+  //         child: Text('Weather data unavailable'),
+  //       ),
+  //     );
+  //   }
 
-    final current = _weatherData!['current'];
-    final forecast = _weatherData!['forecast']['forecastday'][0]['day'];
+  //   final current = _weatherData!['current'];
+  //   final forecast = _weatherData!['forecast']['forecastday'][0]['day'];
 
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Farming Weather Conditions',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildWeatherParameter(
-                  'Temperature',
-                  '${current['temp_c'].toStringAsFixed(1)}°C',
-                  Icons.thermostat,
-                  'Optimal: 20-30°C',
-                ),
-                _buildWeatherParameter(
-                  'Soil Moisture',
-                  '${current['humidity']}%',
-                  Icons.water_drop,
-                  'Ideal: 60-80%',
-                ),
-                _buildWeatherParameter(
-                  'Wind Speed',
-                  '${current['wind_kph'].toStringAsFixed(1)} km/h',
-                  Icons.air,
-                  'Safe: <20 km/h',
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildWeatherParameter(
-                  'Rainfall',
-                  '${forecast['totalprecip_mm']} mm',
-                  Icons.umbrella,
-                  'Expected today',
-                ),
-                _buildWeatherParameter(
-                  'UV Index',
-                  current['uv'].toString(),
-                  Icons.wb_sunny,
-                  'Protection needed: >3',
-                ),
-                _buildWeatherParameter(
-                  'Pest Risk',
-                  _calculatePestRisk(current['temp_c'], current['humidity']),
-                  Icons.bug_report,
-                  'Based on conditions',
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  //   return Card(
+  //     elevation: 4,
+  //     child: Padding(
+  //       padding: const EdgeInsets.all(16.0),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Text(
+  //             'Farming Weather Conditions',
+  //             style: Theme.of(context).textTheme.headlineSmall,
+  //           ),
+  //           const SizedBox(height: 16),
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //             children: [
+  //               _buildWeatherParameter(
+  //                 'Temperature',
+  //                 '${current['temp_c'].toStringAsFixed(1)}°C',
+  //                 Icons.thermostat,
+  //                 'Optimal: 20-30°C',
+  //               ),
+  //               _buildWeatherParameter(
+  //                 'Soil Moisture',
+  //                 '${current['humidity']}%',
+  //                 Icons.water_drop,
+  //                 'Ideal: 60-80%',
+  //               ),
+  //               _buildWeatherParameter(
+  //                 'Wind Speed',
+  //                 '${current['wind_kph'].toStringAsFixed(1)} km/h',
+  //                 Icons.air,
+  //                 'Safe: <20 km/h',
+  //               ),
+  //             ],
+  //           ),
+  //           const SizedBox(height: 16),
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //             children: [
+  //               _buildWeatherParameter(
+  //                 'Rainfall',
+  //                 '${forecast['totalprecip_mm']} mm',
+  //                 Icons.umbrella,
+  //                 'Expected today',
+  //               ),
+  //               _buildWeatherParameter(
+  //                 'UV Index',
+  //                 current['uv'].toString(),
+  //                 Icons.wb_sunny,
+  //                 'Protection needed: >3',
+  //               ),
+  //               _buildWeatherParameter(
+  //                 'Pest Risk',
+  //                 _calculatePestRisk(current['temp_c'], current['humidity']),
+  //                 Icons.bug_report,
+  //                 'Based on conditions',
+  //               ),
+  //             ],
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  String _calculatePestRisk(double temp, double humidity) {
-    if (temp > 25 && humidity > 70) {
-      return 'High';
-    } else if (temp > 20 && humidity > 60) {
-      return 'Medium';
-    } else {
-      return 'Low';
-    }
-  }
+  // String _calculatePestRisk(double temp, double humidity) {
+  //   if (temp > 25 && humidity > 70) {
+  //     return 'High';
+  //   } else if (temp > 20 && humidity > 60) {
+  //     return 'Medium';
+  //   } else {
+  //     return 'Low';
+  //   }
+  // }
 
   Widget _buildZoneLegend(String label, Color color) {
     return Row(
@@ -1246,11 +1246,7 @@ Widget _buildMarketTrends() {
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 16),
-            _buildFinancialForm(),
-            const SizedBox(height: 16),
-            _buildFinancialSummary(),
-            const SizedBox(height: 16),
-            
+          
           ],
         ),
       ),
@@ -1259,158 +1255,158 @@ Widget _buildMarketTrends() {
 
 
 
-  Widget _buildFinancialForm() {
-    return Column(
-      children: [
-        ExpansionTile(
-          title: const Text('Add Expense'),
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _expenseNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Expense Description',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _expenseAmountController,
-                    decoration: const InputDecoration(
-                      labelText: 'Amount',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _addExpense,
-                    child: const Text('Add Expense'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        ExpansionTile(
-          title: const Text('Add Income'),
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _incomeSourceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Income Source',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _incomeAmountController,
-                    decoration: const InputDecoration(
-                      labelText: 'Amount',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _addIncome,
-                    child: const Text('Add Income'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+  // Widget _buildFinancialForm() {
+  //   return Column(
+  //     children: [
+  //       ExpansionTile(
+  //         title: const Text('Add Expense'),
+  //         children: [
+  //           Padding(
+  //             padding: const EdgeInsets.all(16.0),
+  //             child: Column(
+  //               children: [
+  //                 TextFormField(
+  //                   controller: _expenseNameController,
+  //                   decoration: const InputDecoration(
+  //                     labelText: 'Expense Description',
+  //                     border: OutlineInputBorder(),
+  //                   ),
+  //                 ),
+  //                 const SizedBox(height: 8),
+  //                 TextFormField(
+  //                   controller: _expenseAmountController,
+  //                   decoration: const InputDecoration(
+  //                     labelText: 'Amount',
+  //                     border: OutlineInputBorder(),
+  //                   ),
+  //                   keyboardType: TextInputType.number,
+  //                 ),
+  //                 const SizedBox(height: 16),
+  //                 ElevatedButton(
+  //                   onPressed: _addExpense,
+  //                   child: const Text('Add Expense'),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       ExpansionTile(
+  //         title: const Text('Add Income'),
+  //         children: [
+  //           Padding(
+  //             padding: const EdgeInsets.all(16.0),
+  //             child: Column(
+  //               children: [
+  //                 TextFormField(
+  //                   controller: _incomeSourceController,
+  //                   decoration: const InputDecoration(
+  //                     labelText: 'Income Source',
+  //                     border: OutlineInputBorder(),
+  //                   ),
+  //                 ),
+  //                 const SizedBox(height: 8),
+  //                 TextFormField(
+  //                   controller: _incomeAmountController,
+  //                   decoration: const InputDecoration(
+  //                     labelText: 'Amount',
+  //                     border: OutlineInputBorder(),
+  //                   ),
+  //                   keyboardType: TextInputType.number,
+  //                 ),
+  //                 const SizedBox(height: 16),
+  //                 ElevatedButton(
+  //                   onPressed: _addIncome,
+  //                   child: const Text('Add Income'),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ],
+  //   );
+  // }
 
-  Widget _buildFinancialSummary() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('farmers')
-          .doc(widget.farmerId)
-          .collection('transactions')
-          .orderBy('timestamp', descending: true)
-          .snapshots(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+  // Widget _buildFinancialSummary() {
+  //   return StreamBuilder<QuerySnapshot>(
+  //     stream: FirebaseFirestore.instance
+  //         .collection('farmers')
+  //         .doc(widget.farmerId)
+  //         .collection('transactions')
+  //         .orderBy('timestamp', descending: true)
+  //         .snapshots(),
+  //     builder: (context, snapshot) {
+  //       if (!snapshot.hasData) {
+  //         return const Center(child: CircularProgressIndicator());
+  //       }
 
-        final transactions = snapshot.data!.docs;
-        double totalIncome = 0;
-        double totalExpenses = 0;
+  //       final transactions = snapshot.data!.docs;
+  //       double totalIncome = 0;
+  //       double totalExpenses = 0;
 
-        for (var doc in transactions) {
-          final data = doc.data() as Map<String, dynamic>;
-          if (data['type'] == 'income') {
-            totalIncome += data['amount'] ?? 0;
-          } else {
-            totalExpenses += data['amount'] ?? 0;
-          }
-        }
+  //       for (var doc in transactions) {
+  //         final data = doc.data() as Map<String, dynamic>;
+  //         if (data['type'] == 'income') {
+  //           totalIncome += data['amount'] ?? 0;
+  //         } else {
+  //           totalExpenses += data['amount'] ?? 0;
+  //         }
+  //       }
 
-        return Column(
-          children: [
-            Card(
-              child: ListTile(
-                title: const Text('Net Balance'),
-                trailing: Text(
-                  '₹${(totalIncome - totalExpenses).toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: totalIncome >= totalExpenses
-                        ? Colors.green
-                        : Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: transactions.length,
-              itemBuilder: (context, index) {
-                final transaction =
-                    transactions[index].data() as Map<String, dynamic>;
-                return ListTile(
-                  leading: Icon(
-                    transaction['type'] == 'income'
-                        ? Icons.arrow_upward
-                        : Icons.arrow_downward,
-                    color: transaction['type'] == 'income'
-                        ? Colors.green
-                        : Colors.red,
-                  ),
-                  title: Text(transaction['description']),
-                  subtitle: Text(DateFormat('MMM dd, yyyy').format(
-                    (transaction['timestamp'] as Timestamp).toDate(),
-                  )),
-                  trailing: Text(
-                    '₹${transaction['amount'].toStringAsFixed(2)}',
-                    style: TextStyle(
-                      color: transaction['type'] == 'income'
-                          ? Colors.green
-                          : Colors.red,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //       return Column(
+  //         children: [
+  //           Card(
+  //             child: ListTile(
+  //               title: const Text('Net Balance'),
+  //               trailing: Text(
+  //                 '₹${(totalIncome - totalExpenses).toStringAsFixed(2)}',
+  //                 style: TextStyle(
+  //                   color: totalIncome >= totalExpenses
+  //                       ? Colors.green
+  //                       : Colors.red,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //           const SizedBox(height: 16),
+  //           ListView.builder(
+  //             shrinkWrap: true,
+  //             physics: const NeverScrollableScrollPhysics(),
+  //             itemCount: transactions.length,
+  //             itemBuilder: (context, index) {
+  //               final transaction =
+  //                   transactions[index].data() as Map<String, dynamic>;
+  //               return ListTile(
+  //                 leading: Icon(
+  //                   transaction['type'] == 'income'
+  //                       ? Icons.arrow_upward
+  //                       : Icons.arrow_downward,
+  //                   color: transaction['type'] == 'income'
+  //                       ? Colors.green
+  //                       : Colors.red,
+  //                 ),
+  //                 title: Text(transaction['description']),
+  //                 subtitle: Text(DateFormat('MMM dd, yyyy').format(
+  //                   (transaction['timestamp'] as Timestamp).toDate(),
+  //                 )),
+  //                 trailing: Text(
+  //                   '₹${transaction['amount'].toStringAsFixed(2)}',
+  //                   style: TextStyle(
+  //                     color: transaction['type'] == 'income'
+  //                         ? Colors.green
+  //                         : Colors.red,
+  //                   ),
+  //                 ),
+  //               );
+  //             },
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   Future<void> _addExpense() async {
     await _addTransaction('expense');
@@ -1482,12 +1478,10 @@ Widget _buildMarketTrends() {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildFarmerDetails(),
-                    _buildWeatherSection(),
              
                     const SizedBox(height: 16),
                     _buildMarketTrends(),
                     const SizedBox(height: 16),
-                    _buildFinancialSection(),
                   ],
                 ),
               ),
