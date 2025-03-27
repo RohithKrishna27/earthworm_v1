@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project_earthworm/farmer/CropAnalysisScreen.dart';
+import 'package:project_earthworm/npkanalyse.dart';
 
 class Language {
   static const String english = 'en';
@@ -126,7 +127,13 @@ Navigator.push(
               title: _languageTexts[_currentLanguage]!['npk_values']!,
               icon: Icons.science,
               onTap: () {
-                // Navigate to NPK Values screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NPKAnalysisScreen(),
+                  ),
+                ); 
+                
               },
             ),
             OptionButton(

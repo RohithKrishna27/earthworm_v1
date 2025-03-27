@@ -194,7 +194,7 @@ class _BuyerHomeState extends State<BuyerHome> {
             BottomNavigationBarItem(
               icon: Icon(Icons.gavel_outlined),
               activeIcon: Icon(Icons.gavel),
-              label: 'Orders',
+              label: 'Auctions',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.emoji_events_outlined),
@@ -349,27 +349,8 @@ class BuyerHomePage extends StatelessWidget {
                         () =>
                             Navigator.pushNamed(context, '/buyer/browse-crops'),
                       ),
-                      _buildFeatureCard(
-                          context,
-                          'AI Assistant',
-                          Icons.chat,
-                          Colors.orange,
-                          () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatbotWebView(
-                                    chatbotUrl:
-                                        "https://effulgent-semifreddo-39d899.netlify.app/",
-                                  ),
-                                ),
-                              )),
-                      _buildFeatureCard(
-                        context,
-                        'Market Insights',
-                        Icons.insights,
-                        Colors.purple,
-                        () => Navigator.pushNamed(context, '/buyer/insights'),
-                      ),
+                    
+                    
                     ],
                   ),
                   SizedBox(height: 24),
@@ -520,7 +501,7 @@ class BuyerHomePage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Recent Auctions',
+          'Active Auctions',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
